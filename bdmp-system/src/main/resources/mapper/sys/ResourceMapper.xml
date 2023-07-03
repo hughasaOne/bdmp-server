@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.ResourceDao">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+        <id column="resource_id" property="resourceId" />
+        <result column="resource_title" property="resourceTitle" />
+        <result column="parent_id" property="parentId" />
+        <result column="resource_type" property="resourceType" />
+        <result column="app_id" property="appId" />
+        <result column="external_link" property="externalLink" />
+        <result column="external_link_url" property="externalLinkUrl" />
+        <result column="external_link_open" property="externalLinkOpen" />
+        <result column="cache" property="cache" />
+        <result column="hidden" property="hidden" />
+        <result column="path" property="path" />
+        <result column="component_name" property="componentName" />
+        <result column="component_path" property="componentPath" />
+        <result column="icon" property="icon" />
+        <result column="permission" property="permission" />
+        <result column="description" property="description" />
+        <result column="sort" property="sort" />
+        <result column="datastatusid" property="datastatusid" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!--更新角色资源权限（根据资源Id）-->
+    <insert id="insertRoleResourceByResourceId">
+        INSERT INTO t_bdmp_sys_role_resource ( role_id, resource_id, create_by, create_time )
+        VALUES
+        <foreach item='roleId' index='index' collection='roleIds' separator=',' open='' close=''>
+            <trim>
+                (#{roleId},#{resourceId},#{createBy},#{createTime})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--删除角色资源权限表（根据资源Id）-->
+    <delete id="deleteRoleResourceByResourceId">
+        DELETE
+        FROM
+        t_bdmp_sys_role_resource
+        <where>
+            resource_id IN
+            <foreach item="resourceId" index="index" collection="resourceIds" separator="," open="(" close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+    <!--删除角色资源表（根据资源Id、应用Id）-->
+    <delete id="deleteRoleResourceByResourceIdAndAppId">
+	    DELETE
+        FROM
+	        t_bdmp_sys_role_resource
+        WHERE
+	        resource_id = #{resourceId}
+	        AND role_id in ( SELECT role_id FROM t_bdmp_sys_role WHERE app_id = #{appId})
+    </delete>
+
+    <!--查找子资源（包含当前节点）-->
+    <select id="findResouceChildren" resultMap="BaseResultMap">
+        SELECT
+            t.resource_id, t.resource_title, t.parent_id, t.resource_type, t.app_id, t.external_link,t.external_link_url,t.external_link_open, t.cache, t.hidden, t.path, t.component_name, t.component_path, t.icon, t.permission, t.description, t.sort, t.datastatusid, t.create_by, t.create_time, t.update_by, t.update_time
+        FROM
+            (
+                SELECT
+                    a.id,
+                    IF
+                        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+                FROM
+                    ( SELECT resource_id AS id, parent_id AS pid FROM t_bdmp_sys_resource ) a,
+                    ( SELECT @pids := #{resourceId} ) vars
+                    ) b
+                        JOIN t_bdmp_sys_resource t ON b.id = t.resource_id
+                WHERE
+                        b.ischild != '0' or t.resource_id= #{resourceId}
+    </select>
+
+    <!--查询角色资源权限（根据资源ID）-->
+    <select id="findRoleIdsByResourceId" resultType="java.lang.String">
+        SELECT role_id FROM t_bdmp_sys_role_resource
+        <where>
+            <if test="resourceId!=null and resourceId!=''">
+                resource_id=#{resourceId}
+            </if>
+        </where>
+    </select>
+
+    <!--查询角色资源权限（根据资源ID、应用ID）-->
+    <select id="findRoleIdsByResourceIdAndAppId" resultType="java.lang.String">
+        SELECT
+	        role_id
+        FROM
+	        t_bdmp_sys_role_resource rr
+        WHERE
+	        resource_id = #{resourceId}
+	        AND EXISTS ( SELECT role_id FROM t_bdmp_sys_role r WHERE app_id = #{appId} AND rr.role_id = r.role_id )
+    </select>
+
+    <!--查询当前用户拥有的目录和菜单资源-->
+    <select id="selectResourceByTypeAndRole" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+        SELECT
+	        resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+	        t_bdmp_sys_resource resource
+        WHERE
+            ( resource_type = 1 OR resource_type = 2)
+	        AND app_id = #{appId}
+	        AND EXISTS (
+	        SELECT
+		        resource_id
+	        FROM
+		        t_bdmp_sys_role_resource roleResource
+	        WHERE
+		        EXISTS (
+		        SELECT
+			        role_id
+		        FROM
+			        t_bdmp_sys_role role
+		        WHERE
+			        app_id = #{appId}
+			        AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = #{userId} AND userRole.role_id = role.role_id )
+			        AND roleResource.role_id = role.role_id
+		        )
+	        AND resource.resource_id = roleResource.resource_id
+	        )
+    </select>
+
+    <!--查询当前用户拥有的目录和菜单、按钮资源-->
+    <select id="selectResourceByTypeAndRole2" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+        SELECT
+	        resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+	        t_bdmp_sys_resource resource
+        WHERE
+            app_id = #{appId}
+	        AND EXISTS (
+	        SELECT
+		        resource_id
+	        FROM
+		        t_bdmp_sys_role_resource roleResource
+	        WHERE
+		        EXISTS (
+		        SELECT
+			        role_id
+		        FROM
+			        t_bdmp_sys_role role
+		        WHERE
+			        app_id = #{appId}
+			        AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = #{userId} AND userRole.role_id = role.role_id )
+			        AND roleResource.role_id = role.role_id
+		        )
+	        AND resource.resource_id = roleResource.resource_id
+	        )
+        ORDER BY sort ASC,create_time DESC
+    </select>
+
+    <select id="getUserMenu" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+        SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = #{appId}
+    </select>
+
+
+    <!--查询资源子节点（根据应用ID、资源ID）-->
+    <select id="findResourceChildren" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+            SELECT
+                resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,cache,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time,
+                IF((select count(resource_id) from t_bdmp_sys_resource where parent_id=a.resource_id )>0,1,0) as hasChild
+            FROM
+                t_bdmp_sys_resource a
+            <where>
+                app_id = #{appId}
+                <choose>
+                    <when test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                        AND ${ew.sqlSegment}
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="parentId != null and parentId != '' ">
+                                and parent_id = #{parentId}
+                            </when>
+                            <otherwise>
+                                <choose>
+                                    <when test="includeId != null and includeId != '' ">
+                                        and (parent_id = '' or parent_id is null)
+                                        or exists(
+                                        SELECT t.resource_id FROM (
+                                        SELECT
+                                        @r AS _id,
+                                        ( SELECT @r := parent_id FROM t_bdmp_sys_resource WHERE resource_id = _id limit 1) AS pid
+                                        FROM
+                                        t_bdmp_sys_resource h,
+                                        ( SELECT @r := #{includeId}) vars
+                                        ) a
+                                        JOIN t_bdmp_sys_resource t ON a._id = t.resource_id
+                                        where t.resource_id = a.resource_id
+                                        )
+                                    </when>
+                                    <otherwise>
+                                        and (parent_id = '' or parent_id is null)
+                                    </otherwise>
+                                </choose>
+                            </otherwise>
+                        </choose>
+                    </otherwise>
+                </choose>
+                order by a.sort asc, a.create_time desc
+            </where>
+    </select>
+
+    <!--根据父节点获取资源列表-->
+    <select id="listByParentId" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.ResourceVo">
+        select res.*,
+        (select count(*) from t_bdmp_sys_resource r where r.parent_id = res.resource_id ) as hasChild
+        from t_bdmp_sys_resource res
+        <where>
+            <if test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                and ${ew.sqlSegment}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

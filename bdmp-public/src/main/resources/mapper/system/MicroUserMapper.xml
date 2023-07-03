@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.system.dao.MicroUserDao">
+    <!-- 查询映射结果 -->
+    <resultMap id="MicroUserVo" type="com.rhy.bdmp.open.modules.system.domain.vo.MicroUserVo">
+        <id column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="nick_name" property="nickName" />
+        <result column="org_id" property="orgId" />
+        <result column="org_name" property="orgName" />
+        <result column="org_short_name" property="orgShortName" />
+        <result column="org_code" property="orgCode" />
+        <result column="org_type" property="orgType" />
+        <result column="org_type_name" property="orgTypeName" />
+        <result column="description" property="description" />
+    </resultMap>
+
+    <!--查询(Micro)用户信息,根据用户ID-->
+    <select id="getMicroUserInfo" resultType="com.rhy.bdmp.open.modules.system.domain.vo.MicroUserVo">
+        select u.user_id userId,u.username,u.user_type userType,u.nick_name nickName,u.phone,u.org_id orgId,o.org_name orgName,o.org_short_name orgShortName,o.org_type orgType,
+          (select name from t_bdmp_assets_dict d where d.`code`=o.org_type limit 1) as orgTypeName,
+          o.description,u.user_config userConfig,post.name as post,
+          case u.post_level
+          when 1 then '高级管理'
+          when 2 then '中级管理'
+          when 3 then '一般管理'
+          when 4 then '一般员工'
+          else u.post_level
+          end as postLevel,
+          u.email,expired_time
+        from  t_bdmp_sys_user u left join t_bdmp_sys_org o on u.org_id=o.org_id
+        left join t_bdmp_assets_dict_post post on post.post_id = u.post
+        where user_id = #{userId}
+    </select>
+
+    <!--查询(Micro)用户信息,根据用户ID-->
+    <select id="getMicroOrgInfoByOrgId" resultType="com.rhy.bdmp.open.modules.system.domain.vo.MicroUserVo">
+        SELECT
+            o.*
+        FROM
+            t_bdmp_sys_org o
+                LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = #{orgId}
+        WHERE
+            o.org_id = #{orgId}
+    </select>
+
+
+</mapper>

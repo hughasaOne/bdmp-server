@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.VPDao">
+
+    <!--现有的目录结构不能很好的支持以前的查询逻辑-->
+<!--    <select id="getContactTree" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        <choose>
+            <when test=" '' != orgId and null != orgId">
+                <if test=" 'group' == nodeType">
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    inner join (select facilities_id from t_bdmp_assets_facilities where
+                    waysection_id in (select waysection_id from t_bdmp_assets_waysection where
+                    manage_id in (select org_id from t_bdmp_sys_org where parent_id = #{orgId}))) facilities
+                    on resource.rel_toll_station_id = facilities.facilities_id
+                    where node_type = 2
+                    and (rel_toll_station_id is not null and rel_toll_station_id != '')
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                </if>
+                <if test=" 'org' == nodeType">
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    inner join (select facilities_id from t_bdmp_assets_facilities where
+                    waysection_id in (select waysection_id from t_bdmp_assets_waysection where
+                    manage_id = #{orgId})) facilities
+                    on resource.rel_toll_station_id = facilities.facilities_id
+                    where node_type = 2
+                    and (rel_toll_station_id is not null and rel_toll_station_id != '')
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                </if>
+                <if test=" 'way' == nodeType">
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    inner join (select facilities_id from t_bdmp_assets_facilities where
+                    waysection_id = #{orgId}) facilities
+                    on resource.rel_toll_station_id = facilities.facilities_id
+                    where node_type = 2
+                    and (rel_toll_station_id is not null and rel_toll_station_id != '')
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                </if>
+                <if test=" 'fac' == nodeType">
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    inner join (select facilities_id from t_bdmp_assets_facilities where
+                    facilities_id = #{orgId}) facilities
+                    on resource.rel_toll_station_id = facilities.facilities_id
+                    where node_type = 2
+                    and (rel_toll_station_id is not null and rel_toll_station_id != '')
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                </if>
+            </when>
+            <otherwise>
+                select id,
+                name,
+                resource.parent_id,
+                node_type,
+                resource.status,
+                resource.sort,
+                rel_toll_station_id
+                from t_bdmp_assets_vp_resource resource
+                where node_type = 2
+                <if test=" '' != name and null != name ">
+                    and name like concat("%",#{name},"%")
+                </if>
+            </otherwise>
+        </choose>
+    </select>-->
+
+    <!--v1 查找root-->
+    <select id="getContactTree" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        <choose>
+            <when test=" '' != orgId and null != orgId">
+                <if test=" 'group' == nodeType">
+                    select id,
+                    name,
+                    "0" as parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    where id = "交投集团"
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                    and datastatusid = 1
+                </if>
+                <if test=" 'org' == nodeType">
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    where resource.rel_toll_station_id = #{orgId}
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                    and datastatusid = 1
+                    union all
+                    select id,
+                    name,
+                    resource.parent_id,
+                    node_type,
+                    resource.status,
+                    resource.sort,
+                    rel_toll_station_id
+                    from t_bdmp_assets_vp_resource resource
+                    where resource.rel_toll_station_id = "YYGSPCZX"
+                    <if test=" '' != name and null != name ">
+                        and name like concat("%",#{name},"%")
+                    </if>
+                    and datastatusid = 1
+                </if>
+            </when>
+            <otherwise>
+                select id,
+                name,
+                if((resource.parent_id is null or resource.parent_id = ''),"0",resource.parent_id) as parent_id,
+                node_type,
+                resource.status,
+                resource.sort,
+                rel_toll_station_id
+                from t_bdmp_assets_vp_resource resource
+                where (parent_id is null org parent_id = '')
+                <if test=" '' != name and null != name ">
+                    and name like concat("%",#{name},"%")
+                </if>
+                and datastatusid = 1
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getTerminalByOrg" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        select id,
+               name,
+               resource.parent_id,
+               node_type,
+               resource.status,
+               resource.sort,
+               rel_toll_station_id
+        from t_bdmp_assets_vp_resource resource
+        where parent_id = #{resource.name}
+        <if test=" 'group' == nodeType">
+            or parent_id = #{resource.parentId}
+            and node_type = 2
+        </if>
+    </select>
+
+    <select id="findChildren" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        select id,
+               name,
+               resource.parent_id,
+               node_type,
+               resource.status,
+               resource.sort,
+               rel_toll_station_id
+        from t_bdmp_assets_vp_resource resource
+        where parent_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and datastatusid = 1
+    </select>
+
+    <select id="findParent" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        select id,
+               name,
+               "0" as parent_id,
+               node_type,
+               resource.status,
+               resource.sort,
+               rel_toll_station_id
+        from t_bdmp_assets_vp_resource resource
+        where id in
+        <foreach collection="rootList" item="root" open="(" separator="," close=")">
+            #{root.parentId}
+        </foreach>
+        and datastatusid = 1
+    </select>
+    <select id="findPCSeat" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Resource">
+        select id,
+               name,
+               resource.parent_id,
+               node_type,
+               resource.status,
+               resource.sort,
+               rel_toll_station_id
+        from t_bdmp_assets_vp_resource resource
+        where parent_id = #{resource.parentId}
+        and node_type = "2"
+        and datastatusid = 1
+    </select>
+</mapper>

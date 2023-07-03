@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.DictDao">
+
+    <!--查询设备（分页）-->
+    <select id="queryPage" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Dict">
+        <choose>
+            <when test="null != parentCode and '' != parentCode">
+                select * from (
+                select * from (
+                select a.id,
+                IF
+                ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                from
+                ( select dict_id as id, parent_id as pid from t_bdmp_sys_dict ) a,
+                ( select @pids := (select dict_id from t_bdmp_sys_dict zd where zd.code=#{parentCode})) vars
+                ) b
+                join t_bdmp_sys_dict t on b.id = t.dict_id
+                where
+                b.ischild != '0'
+                ) d where 1=1
+                <if test="null != dictName and '' != dictName">
+                    and d.name like concat('%',#{dictName},'%')
+                </if>
+                order by sort asc, create_time desc
+            </when>
+            <otherwise>
+                select * from t_bdmp_sys_dict where 1=1
+                <if test="null != dictName and '' != dictName">
+                    and name like concat('%',#{dictName},'%')
+                </if>
+                order by sort asc, create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--查询字典根据字典类型CODE-->
+    <select id="queryByCode" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Dict">
+        select * from (
+        select * from (
+        select a.id,
+        IF
+        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+        from
+        ( select dict_id as id, parent_id as pid from t_bdmp_sys_dict ) a,
+        ( select @pids := (select dict_id from t_bdmp_sys_dict zd where zd.code=#{parentCode})) vars
+        ) b
+        join t_bdmp_sys_dict t on b.id = t.dict_id
+        where
+        b.ischild != '0'
+        ) d where 1=1
+        <if test="null != dictName and '' != dictName">
+            and d.name like concat('%',#{dictName},'%')
+        </if>
+        order by sort asc, create_time desc
+    </select>
+
+    <!--查找子节点-->
+    <select id="findChild" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.DictVO">
+        select distinct
+            dict_id, name, code, parent_id, if(level is null or level="",0,level) level , node_type, sort, datastatusid, create_by, create_time, update_by, update_time,
+            IF (( select count( * ) FROM t_bdmp_sys_dict where parent_id = a.dict_id)> 0, 1, 0 ) AS hasChild
+        from t_bdmp_sys_dict a
+        where 1=1
+        <choose>
+            <when test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                AND ${ew.sqlSegment}
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="parentId != null and parentId != '' ">
+                        and parent_id = #{parentId}
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="includeId != null and includeId != '' ">
+                                and (parent_id = '' or parent_id is null)
+                                or exists(
+                                    SELECT t.dict_id FROM (
+                                    SELECT
+                                        @r AS _id,
+                                        ( SELECT @r := parent_id FROM t_bdmp_sys_dict WHERE dict_id = _id limit 1) AS pid
+                                    FROM
+                                      t_bdmp_sys_dict h,
+                                    ( SELECT @r := #{includeId}) vars
+                                    ) a
+                                    JOIN t_bdmp_sys_dict t ON a._id = t.dict_id
+                                    where t.dict_id = a.dict_id
+                                )
+                            </when>
+                            <otherwise>
+                                and (parent_id = '' or parent_id is null)
+                            </otherwise>
+                        </choose>
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+        order by a.sort asc, a.create_time desc
+    </select>
+
+    <!--查找子节点-只找字典-->
+    <select id="findChildDict" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.DictVO">
+        <choose>
+            <when test="parentId != null and parentId != '' ">
+                select
+                dict_id, name, code, parent_id, if(level is null or level="",0,level) level , node_type, sort, datastatusid, create_by, create_time, update_by, update_time,
+                IF ( ( SELECT count( * ) FROM t_bdmp_sys_dict WHERE parent_id = a.dict_id)> 0, 1, 0 ) AS hasChild
+                from
+                t_bdmp_sys_dict a
+                where
+                1=1
+                <choose>
+                    <when test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                        and ${ew.sqlSegment} and a.node_type = '2'
+                        and exists(
+                            select t.dict_id from (
+                            select a.id,
+                            IF ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                            from
+                            ( select dict_id as id, parent_id as pid from t_bdmp_sys_dict ) a,
+                            ( select @pids := #{parentId}) vars
+                            ) b
+                            join t_bdmp_sys_dict t on b.id = t.dict_id
+                            where
+                            b.ischild != '0'
+                            and t.dict_id = a.dict_id
+                        )
+                    </when>
+                    <otherwise>
+                        and parent_id = #{parentId}
+                    </otherwise>
+                </choose>
+                order by a.sort asc, a.create_time desc
+            </when>
+            <otherwise>
+                select
+                dict_id, name, code, parent_id, level , node_type, sort, datastatusid, create_by, create_time, update_by, update_time,
+                IF ( ( SELECT count( * ) FROM t_bdmp_sys_dict WHERE parent_id = a.dict_id )> 0, 1, 0 ) AS hasChild
+                from
+                t_bdmp_sys_dict a
+                where
+                1=1
+                <choose>
+                    <when test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                        and ${ew.sqlSegment} and a.node_type = '2'
+                    </when>
+                    <otherwise>
+                        and exists(select dict_id from  t_bdmp_sys_dict b where (parent_id is null or parent_id = '') and a.parent_id=b.dict_id)
+                    </otherwise>
+                </choose>
+                order by a.sort asc, a.create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

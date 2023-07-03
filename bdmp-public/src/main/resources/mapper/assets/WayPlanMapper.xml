@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.WayPlanDao">
+    <!-- 获取预计总里程 -->
+    <select id="getPlanMileage" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.WayPlanBO">
+        select
+        max(way.plan_achieve_year) planAchieveYear,
+        sum(way.build_mileage) planAchieveTotalMileage
+        from t_bdmp_assets_waysection_plan way
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    way.belong_company_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and way.belong_company_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and way.belong_company_id = #{orgId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 获取预计里程详情 -->
+    <select id="getPlanMileageDetail" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.WayPlanDetailBO">
+        select
+        section_name,build_mileage,plan_achieve_date
+        from t_bdmp_assets_waysection_plan way
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    way.belong_company_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and way.belong_company_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and way.belong_company_id = #{orgId}
+            </if>
+        </where>
+    </select>
+</mapper>

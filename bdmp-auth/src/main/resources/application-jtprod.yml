@@ -1,0 +1,34 @@
+server:
+  port: 60001
+  servlet:
+    context-path: /bdmpAuth
+
+spring:
+  application:
+    name: bdmp-auth
+
+ovit:
+  datasource:
+    multi:
+      primary: bdmp_public
+      enabled: true
+
+# 全局参数设置
+ribbon:
+  ReadTimeout: 120000
+  ConnectTimeout: 10000
+  SocketTimeout: 10000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+
+# 本服务参数配置
+locale:
+  # 登录参数配置
+  login:
+    loginFailureKey: "login:failure:"
+    # 登录失败次数限制
+    loginFailureNumLimit: 5
+    # 登录失败次数限制后多长时间不允许登录认证（单位：分钟）
+    loginFailureTimeMinutesLimit: 5
+    # 超过登录失败次数后的提示
+    loginFailureNumLimitMsg: "连续登录失败5次,请5分钟后再试"

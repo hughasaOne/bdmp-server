@@ -1,0 +1,30 @@
+server:
+  port: 60057
+  servlet:
+    context-path: /bdmpCollect
+
+spring:
+  application:
+    name: bdmp-collect
+
+ovit:
+  datasource:
+    multi:
+      primary: bdmp_public
+      enabled: true
+
+custom:
+  video:
+    tenglu:
+      clientId: video
+      key: c349d0aa41e2b94ad20ef4fe24ed39e0
+      platformAddress: http://100.65.20.4:8908/
+    yuntai:
+      platformAddress: http://100.65.23.60:5000/
+      username: ezjc
+      password: HBjtkj1410
+      mac: 400142D4265D4DB296CE3AEB03F08B61
+      login: ydjk/app/user/login
+      listPage: ydjk/app/resource/listPage
+  vp:
+    address: http://100.65.20.70:6060/

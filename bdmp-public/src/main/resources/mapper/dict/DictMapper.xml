@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.dict.dao.DictDao">
+    <select id="getSystemTree" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select system_id as id,system_name as name,system_name as shortName,
+               if((parent_id is null or parent_id = ''),'0',parent_id) as parentId,
+               if((sort is null or sort = ''),0,sort) as sort
+        from t_bdmp_assets_dict_system
+    </select>
+
+    <select id="getDeviceDictNode" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select d1.dict_id                                        as id,
+               d1.name                                           as name,
+               d1.name                                           as shortName,
+               '0'                                               as parentId,
+               'deviceType'                                      as nodeType,
+               if((d1.sort is null or d1.sort = ''), 0, d1.sort) as sort,
+               d1.code                                           as type
+        from t_bdmp_assets_dict d1,
+             t_bdmp_assets_dict d2
+        <where>
+            and d1.parent_id = d2.dict_id
+            and d2.code = '13XXXX'
+            <if test="categoryType != 0 and null != categoryRules and categoryRules.size() > 0">
+                <if test="categoryType == 1">
+                    and d1.code in
+                    <foreach collection="categoryRules" item="categoryRule" open="(" separator="," close=")">
+                        #{categoryRule}
+                    </foreach>
+                </if>
+                <if test="categoryType == 2">
+                    and d1.dict_id in (
+                        select device_type_id from t_bdmp_assets_dict_device where device_dict_id in
+                        <foreach collection="categoryRules" item="categoryRule" open="(" separator="," close=")">
+                            #{categoryRule}
+                        </foreach>
+                        and datastatusid = 1
+                    )
+                </if>
+            </if>
+        </where>
+
+        union all
+        select device_dict_id as id,
+               name           as name,
+               name           as shortName,
+               device_type_id as parentId,
+               'deviceDict'   as nodeType,
+               if((sort is null or sort = ''), 0, sort) as sort,
+               device_type_id as type
+        from t_bdmp_assets_dict_device
+        <where>
+            and device_type_id is not null and device_type_id != ''
+            and datastatusid = 1
+            <if test="categoryType != 0 and null != categoryRules and categoryRules.size() > 0">
+                <if test="categoryType == 1">
+                    and device_type_id in (
+                        select dict_id from t_bdmp_assets_dict where code in
+                        <foreach collection="categoryRules" item="categoryRule" open="(" separator="," close=")">
+                            #{categoryRule}
+                        </foreach>
+                    )
+                </if>
+                <if test="categoryType == 2">
+                    and device_dict_id in
+                    <foreach collection="categoryRules" item="categoryRule" open="(" separator="," close=")">
+                        #{categoryRule}
+                    </foreach>
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <select id="getDictList" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select `code` as id,name,name as shortName,
+               if((inner_parent_id is null or inner_parent_id = ''),'0',inner_parent_id) as parentId,
+               if((sort is null or sort = ''),0,sort) as sort
+        from t_bdmp_assets_dict
+        where (`code` is not null and `code` != '')
+        <if test="null != dictBo.parentCode and '' != dictBo.parentCode">
+            and parent_id = (select dict_id from t_bdmp_assets_dict where `code` = #{dictBo.parentCode})
+        </if>
+        and (parent_id is not null and parent_id != '')
+        and datastatusid = 1
+    </select>
+
+    <select id="getDictDetail" resultType="java.util.Map">
+        select dict_id as id,name,code from t_bdmp_assets_dict where code = #{code} and datastatusid = 1
+        union all
+        select device_dict_id as id,name,device_dict_id as code from t_bdmp_assets_dict_device where device_dict_id = #{code} and datastatusid = 1;
+    </select>
+
+    <select id="getCategoryById" resultType="com.rhy.bdmp.base.modules.assets.domain.po.DeviceCategory">
+        select * from t_bdmp_assets_device_category where id = #{categoryId}
+    </select>
+
+    <select id="getDeviceDictList" resultType="java.util.Map">
+        select * from t_bdmp_assets_dict_device
+        where device_type_id = (select dict_id from t_bdmp_assets_dict where code = #{deviceType})
+    </select>
+</mapper>

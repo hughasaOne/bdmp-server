@@ -1,0 +1,650 @@
+2023-03-08 08:42:07.498 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:42:55.627 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:45:26.787 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:46:33.686 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:49:49.551 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:50:35.269 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:51:14.722 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:54:46.881 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 08:58:51.617 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 09:11:00.822 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 09:11:02.134 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 09:11:02.172 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 09:11:02.176 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 09:38:20.114 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 09:38:20.609 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 09:38:20.668 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 09:38:20.678 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:06:22.173 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:06:22.948 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:06:22.997 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:06:23.002 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:08:31.698 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:08:31.715 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:08:31.721 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:08:31.726 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:09:10.320 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:09:10.322 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:09:10.648 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:09:10.966 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 10:55:11.782 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:55:12.226 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            o.*
+        FROM
+            t_bdmp_sys_org o
+                LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ?
+        WHERE
+            o.org_id = ?
+2023-03-08 10:55:12.262 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 10:55:12.265 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 10:57:22.220 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:57:22.282 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            o.*
+        FROM
+            t_bdmp_sys_org o
+                LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ?
+        WHERE
+            o.org_id = ?
+2023-03-08 10:57:22.296 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 10:57:22.307 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 10:58:13.613 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 10:58:13.614 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            o.*
+        FROM
+            t_bdmp_sys_org o
+                LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ?
+        WHERE
+            o.org_id = ?
+2023-03-08 10:58:13.633 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 10:58:13.648 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 11:01:34.907 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:01:35.001 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            o.*
+        FROM
+            t_bdmp_sys_org o
+                LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ?
+        WHERE
+            o.org_id = ?
+2023-03-08 11:01:35.017 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 11:01:35.028 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT o.* FROM t_bdmp_sys_org o LEFT JOIN t_bdmp_assets_dict_post post ON post.post_id = ? AND post.tenant_id = 'superAdmin' WHERE o.org_id = ? AND o.tenant_id = 'superAdmin'
+2023-03-08 11:01:46.610 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:01:46.610 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_sys_org where org_id = ?
+2023-03-08 11:01:46.612 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: select * from t_bdmp_sys_org where org_id = ?
+2023-03-08 11:01:46.612 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: select * from t_bdmp_sys_org where org_id = ?
+2023-03-08 11:11:05.369 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:11:05.380 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+         
+         
+         
+         
+        order by org.sort asc
+2023-03-08 11:11:05.385 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.tenant_id = 'superAdmin' ORDER BY org.sort ASC
+2023-03-08 11:11:05.392 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.tenant_id = 'superAdmin' ORDER BY org.sort ASC
+2023-03-08 11:11:05.436 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:11:05.436 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org p_org where p_org.org_type = '000200'
+2023-03-08 11:11:05.438 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org p_org WHERE p_org.org_type = '000200' AND p_org.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.439 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org p_org WHERE p_org.org_type = '000200' AND p_org.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.455 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:11:05.456 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+2023-03-08 11:11:05.546 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.622 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.686 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:11:05.686 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+2023-03-08 11:11:05.765 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.838 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.852 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:11:05.853 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_assets_waysection way
+        where 1=1
+2023-03-08 11:11:05.853 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_assets_waysection way WHERE 1 = 1 AND way.tenant_id = 'superAdmin'
+2023-03-08 11:11:05.854 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_assets_waysection way WHERE 1 = 1 AND way.tenant_id = 'superAdmin'
+2023-03-08 11:58:53.183 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:58:54.288 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-08 11:58:54.297 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-08 11:58:54.298 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-08 11:59:03.117 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:59:03.118 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+         
+         
+         
+         
+        order by org.sort asc
+2023-03-08 11:59:03.153 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.tenant_id = 'superAdmin' ORDER BY org.sort ASC
+2023-03-08 11:59:03.155 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.tenant_id = 'superAdmin' ORDER BY org.sort ASC
+2023-03-08 11:59:03.201 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:59:03.201 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org p_org where p_org.org_type = '000200'
+2023-03-08 11:59:03.203 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org p_org WHERE p_org.org_type = '000200' AND p_org.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.204 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org p_org WHERE p_org.org_type = '000200' AND p_org.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.226 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:59:03.226 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+2023-03-08 11:59:03.325 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.410 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.475 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:59:03.476 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+2023-03-08 11:59:03.551 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.626 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'superAdmin' WHERE way.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.645 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 11:59:03.645 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_assets_waysection way
+        where 1=1
+2023-03-08 11:59:03.646 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_assets_waysection way WHERE 1 = 1 AND way.tenant_id = 'superAdmin'
+2023-03-08 11:59:03.647 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_assets_waysection way WHERE 1 = 1 AND way.tenant_id = 'superAdmin'
+2023-03-08 12:39:35.365 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 12:39:35.817 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:39:35.821 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:39:35.821 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:46:21.792 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 12:46:22.343 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:46:22.347 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:46:22.347 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:47:54.003 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 12:47:54.101 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:47:54.101 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 12:47:54.101 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 15:19:55.139 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:19:55.653 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+             
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                )
+             
+             
+             
+         
+         
+         
+         
+         
+        order by org.sort asc
+2023-03-08 15:19:55.817 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:19:55.844 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:22:05.613 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:22:05.627 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+         WHERE  way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                    )
+2023-03-08 15:22:05.730 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 15:22:05.807 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 15:22:47.063 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:22:47.065 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+             
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                )
+             
+             
+             
+         
+         
+         
+         
+         
+        order by org.sort asc
+2023-03-08 15:22:47.096 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:22:47.124 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:22:58.608 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:22:58.608 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+         WHERE  way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                    )
+2023-03-08 15:22:58.706 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 15:22:58.784 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 15:23:26.952 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:23:26.954 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+             
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                )
+             
+             
+             
+         
+         
+         
+            and org.org_id = ?
+         
+         
+         
+        order by org.sort asc
+2023-03-08 15:23:26.980 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.org_id = ? AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:23:27.005 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.org_id = ? AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:23:30.602 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:23:30.602 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+         WHERE  way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                    )
+                
+                
+                
+            
+            
+            
+                and way.manage_id = ?
+2023-03-08 15:23:30.703 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-08 15:23:30.789 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-08 15:28:16.904 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:28:16.980 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+             
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                )
+             
+             
+             
+         
+         
+         
+            and org.org_id = ?
+         
+         
+         
+        order by org.sort asc
+2023-03-08 15:28:17.016 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.org_id = ? AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:28:17.040 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.org_id = ? AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:28:19.021 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:28:19.021 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+         WHERE  way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                    )
+                
+                
+                
+            
+            
+            
+                and way.manage_id = ?
+2023-03-08 15:28:19.099 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-08 15:28:19.180 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-08 15:28:40.721 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:28:40.721 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select *
+         
+        from t_bdmp_sys_org org where org.org_type = '000300'
+         
+             
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                )
+             
+             
+             
+         
+         
+         
+         
+         
+        order by org.sort asc
+2023-03-08 15:28:40.725 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:28:40.728 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_org org WHERE org.org_type = '000300' AND org.org_id IN (SELECT permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND org.tenant_id = 'basedata' ORDER BY org.sort ASC
+2023-03-08 15:28:40.747 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 15:28:40.747 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code,
+            org.org_short_name orgName,
+            upper(if(locate('K',way.begin_stake_no),
+            way.begin_stake_no,
+            concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+',
+            (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',way.end_stake_no),
+            way.end_stake_no,
+            concat('K', (substring_index(way.end_stake_no, '.', 1)), '+',
+            (substring_index(way.end_stake_no, '.', -1))))) endStakeNo,
+            org.org_short_name as shortName
+         
+        from t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+         WHERE  way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=? and data_type='2'
+                    )
+2023-03-08 15:28:40.825 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 15:28:40.910 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT way.waysection_id, way.waysection_name, way.waysection_s_name, way.manage_id, way.waynet_id, way.ori_waynet_id, way.node_id, way.district_ids, way.mileage, way.waysection_code, org.org_short_name orgName, upper(if(locate('K', way.begin_stake_no), way.begin_stake_no, concat('K', (substring_index(way.begin_stake_no, '.', 1)), '+', (substring_index(way.begin_stake_no, '.', -1))))) beginStakeNo, upper(if(locate('K', way.end_stake_no), way.end_stake_no, concat('K', (substring_index(way.end_stake_no, '.', 1)), '+', (substring_index(way.end_stake_no, '.', -1))))) endStakeNo, org.org_short_name AS shortName FROM t_bdmp_assets_waysection way LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE way.manage_id IN (SELECT o.permissions_id FROM t_bdmp_sys_user_data o WHERE user_id = ? AND data_type = '2' AND o.tenant_id = 'basedata') AND way.tenant_id = 'basedata'
+2023-03-08 17:45:04.128 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-08 17:45:04.313 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 17:45:04.325 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-08 17:45:04.326 [http-nio-60005-exec-8] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?

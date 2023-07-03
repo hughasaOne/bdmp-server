@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.RoleDao">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rhy.bdmp.system.modules.sys.domain.vo.RoleVo">
+        <id column="role_id" property="roleId" />
+        <result column="role_name" property="roleName" />
+        <result column="app_id" property="appId" />
+        <result column="description" property="description" />
+        <result column="sort" property="sort" />
+        <result column="datastatusid" property="datastatusid" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!--更新用户角色权限（根据角色ID更新）-->
+    <insert id="insertUserRoleByRoleId">
+        INSERT INTO t_bdmp_sys_user_role ( user_id, role_id, create_by, create_time)
+        VALUES
+        <foreach item='userId' index='index' collection='userIds' separator=',' open='' close=''>
+            <trim>
+                (#{userId},#{roleId},#{createBy},#{createTime})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--更新角色资源权限（根据角色ID更新）-->
+    <insert id="insertRoleResourceByRoleId">
+        INSERT INTO t_bdmp_sys_role_resource ( role_id, resource_id, create_by, create_time )
+        VALUES
+        <foreach item='resourceId' index='index' collection='resourceIds' separator=',' open='' close=''>
+            <trim>
+                (#{roleId},#{resourceId},#{createBy},#{createTime})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--删除角色资源表（根据角色Id）-->
+    <delete id="deleteRoleResourceByRoleIds">
+        DELETE
+        FROM
+        t_bdmp_sys_role_resource
+        <where>
+            role_id IN
+            <foreach item="roleId" index="index" collection="roleIds" separator="," open="(" close=")">
+                <trim>
+                    #{roleId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+    <!--删除用户角色（根据角色Id）-->
+    <delete id="deleteUserRoleByRoleIds">
+        DELETE
+        FROM
+        t_bdmp_sys_user_role
+        <where>
+            role_id IN
+            <foreach item="roleId" index="index" collection="roleIds" separator="," open="(" close=")">
+                <trim>
+                    #{roleId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+    <!--删除用户角色表（根据角色Id、应用Id）-->
+    <delete id="deleteUserRoleByRoleIdAndAppId">
+        DELETE
+        FROM
+	        t_bdmp_sys_user_role
+        WHERE
+	        role_id = #{roleId}
+          AND role_id in ( SELECT role_id FROM t_bdmp_sys_role WHERE app_id = #{appId} )
+    </delete>
+
+    <!--删除角色资源表（根据角色ID、应用ID）-->
+    <delete id="deleteRoleResourceByRoleIdAndAppId">
+        DELETE
+        FROM
+	        t_bdmp_sys_role_resource
+        WHERE
+	        role_id = #{roleId}
+	        AND resource_id IN (
+	        SELECT
+		        resource_id
+	        FROM
+		        t_bdmp_sys_resource
+        WHERE
+	        app_id = #{appId})
+    </delete>
+
+
+    <!--查询用户角色权限（根据角色ID，返回用户ID集合）-->
+    <select id="findUserIdsByRoleId" resultType="java.lang.String">
+        SELECT user_id FROM t_bdmp_sys_user_role
+        <where>
+            <if test="roleId!=null and roleId!=''">
+                role_id=#{roleId}
+            </if>
+        </where>
+    </select>
+
+    <!--查询角色资源权限（根据角色ID，返回资源ID集合）-->
+    <select id="findResourceIdsByRoleIds" resultType="java.lang.String">
+        SELECT resource_id FROM t_bdmp_sys_role_resource
+        <where>
+            role_id IN
+            <foreach item="roleId" index="index" collection="roleIds" separator="," open="(" close=")">
+                <trim>
+                    #{roleId}
+                </trim>
+            </foreach>
+        </where>
+    </select>
+
+    <!--根据角色ID查询role_resource表，返回资源ID(只返回子节点)-->
+    <select id="findResourceIdsByRoleIdsWithoutParentId" resultType="java.lang.String">
+        SELECT
+	        a.resource_id
+        FROM
+	        t_bdmp_sys_role_resource AS a
+	        LEFT JOIN ( SELECT parent_id FROM t_bdmp_sys_resource WHERE parent_id != NULL OR parent_id != '' ) AS b ON a.resource_id = b.parent_id
+        WHERE
+	        a.role_id IN
+                <foreach item="roleId" index="index" collection="roleIds" separator="," open="(" close=")">
+                    <trim>
+                        #{roleId}
+                    </trim>
+                </foreach>
+	        AND b.parent_id IS NULL;
+    </select>
+
+    <!--根据角色ID、应用ID查询用户角色权限表(返回用户ID集合)-->
+    <select id="findUserIdsByRoleIdAndAppId" resultType="java.lang.String">
+        SELECT
+	        user_id
+        FROM
+	        t_bdmp_sys_user_role ur
+        WHERE
+	        role_id = #{roleId}
+	        AND EXISTS ( SELECT user_id FROM t_bdmp_sys_user u WHERE app_id = #{appId} AND ur.user_id = u.user_id )
+    </select>
+
+    <!--根据角色ID和应用ID查询role_resource表，返回资源ID(只返回子节点)-->
+    <select id="findResourceIdsByRoleIdAndAppIdWithoutParentId" resultType="java.lang.String">
+        SELECT
+	        a.resource_id
+        FROM
+	        (
+	        SELECT
+		        resource_id
+	        FROM
+		        t_bdmp_sys_role_resource rr
+	        WHERE
+		        role_id = #{roleId}
+	        AND EXISTS ( SELECT rr.resource_id FROM t_bdmp_sys_resource r WHERE app_id = #{appId} AND rr.resource_id = r.resource_id )) AS a
+	        LEFT JOIN ( SELECT parent_id FROM t_bdmp_sys_resource WHERE parent_id != NULL OR parent_id != '' ) AS b ON a.resource_id = b.parent_id
+        WHERE
+	        b.parent_id IS NULL;
+    </select>
+
+
+</mapper>

@@ -1,0 +1,18 @@
+server:
+  port: 60055
+  servlet:
+    context-path: /bdmpPublic
+
+spring:
+  application:
+    name: bdmp-public
+
+ovit:
+  datasource:
+    multi:
+      primary: bdmp_public
+      enabled: true
+
+custom:
+  file:
+    downUrl: http://127.0.0.1:18200/bdmp/system/sys/plupload/showImg?fileId=

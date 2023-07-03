@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.WayDao">
+
+    <!-- 获取总里程数 -->
+    <select id="getTotalMileage" resultType="map">
+        select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and way.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and way.waysection_id in (
+                        select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and way.manage_id in (
+                    select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and way.manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and way.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and way.waysection_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id = #{orgId}
+                )
+            </if>
+        </where>
+
+    </select>
+
+    <!-- 根据路段id获取路段简要信息 -->
+    <select id="getWaySectionShort" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.WaySectionShort">
+        SELECT
+            way.waysection_id AS belongSectionId  ,
+            way.waysection_name AS belongSectionName,
+            way.ori_waynet_id as oriWaynetNo,
+            org.org_id AS belongCompanyId,
+            org.org_name AS belongCompanyName,
+            org.org_short_name AS belongCompanySName,
+            way.begin_stake_no AS beginStakeNo,
+            way.end_stake_no AS endStakeNo,
+            sum( way.mileage ) AS manageMileage
+        FROM
+            t_bdmp_assets_waysection way
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        WHERE
+            way.waysection_id = #{waysectionId}
+    </select>
+
+    <!-- 获取路段设施统计信息 -->
+    <select id="getFacStatByWay" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesStatBo">
+        select id, name,
+            sum( case when facilitiestype = '32330200' then total else 0 end ) as tollstationNum,
+            sum( case when facilitiestype = '32330700' then total else 0 end ) as doorFrameNum,
+            sum( case when facilitiestype = '32330600' then total else 0 end ) as bridgeNum,
+            sum( case when facilitiestype = '32330400' then total else 0 end ) as tunnelNum,
+            sum( case when facilitiestype = '32330800' then total else 0 end ) as serviceAreaNum
+        from (
+            select
+                way.waysection_id as id,
+                max( way.waysection_name ) as name,
+                max( way.manage_id ) as orgid,
+                max( org.org_name ) as orgname,
+                fac.facilities_type as facilitiestype,
+                count(*) as total
+            from
+                t_bdmp_assets_waysection way
+            left join (
+                select waysection_id, facilities_id,
+                    ( case when ( 0  &lt;  locate( '323307', facilities_type )) then '32330700' else facilities_type end ) as facilities_type,
+                    facilities_id_old as originid
+                from
+                    t_bdmp_assets_facilities
+                where
+                    facilities_type in ( '32330200', '32330400', '32330700', '32330711', '32330712', '32330800' )
+                union all
+                select operating_waysection_id as waysection_id, facilities_id, '32330600' as facilities_type, id_old as originid
+                from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by operating_waysection_id,facilities_id,bridge_name )
+            ) fac on way.waysection_id = fac.waysection_id
+            left join
+                t_bdmp_sys_org org on way.manage_id = org.org_id
+            where
+                facilities_type is not null and facilities_type != ''
+            group by way.waysection_id, fac.facilities_type
+        ) stat group by id, name
+        having 1=1
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and id in ( select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in ( select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2' ) )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and id in ( select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and 1=2
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and id in (select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (select org_id from t_bdmp_sys_org org where org.org_type = '000300' and parent_id = #{orgId}))
+        </if>
+        <if test=" 'org' == nodeType">
+            and id in (select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId})
+        </if>
+        <if test=" 'way' == nodeType">
+            and id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and 1=2
+        </if>
+        <if test=" null != name and '' != name ">
+            and name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <!-- 获取运营路段里程列表 -->
+    <select id="queryMileageListByWay" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.MileageBo">
+        select waysection_id as id,waysection_name as name,waysection_s_name as shortName, node_id as nodeId, '2' as nodeType,
+        ROUND(ifnull(way.mileage,0),3) as mileage from t_bdmp_assets_waysection way
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and way.manage_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and way.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and 1=2
+                </if>
+            </if>
+            <if test=" null != orgId and '' != orgId ">
+                and way.manage_id = #{orgId}
+            </if>
+        </where>
+        order by mileage desc
+    </select>
+
+    <!--查询路段列表-->
+    <select id="getWayList" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Waysection">
+        select way.*, way.manage_id orgId,
+               (select org.org_short_name from t_bdmp_sys_org org where org.org_id = way.manage_id) orgName
+        from t_bdmp_assets_waysection way
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and way.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and way.waysection_id in (
+                        select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and way.manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and way.waysection_id = #{orgId}
+            </if>
+        </where>
+    </select>
+
+    <!--查询路段详情-->
+    <select id="getWayById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Waysection">
+        select way.*, way.manage_id orgId,
+               (select org.org_short_name from t_bdmp_sys_org org where org.org_id = way.manage_id) orgName
+        from t_bdmp_assets_waysection way
+        where way.waysection_id = #{wayId}
+    </select>
+
+</mapper>

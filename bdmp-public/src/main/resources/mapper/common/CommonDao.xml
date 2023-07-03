@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.common.dao.CommonDao">
+    <sql id="assertPermissions">
+        <if test="1 == userPermissions.dataPermissionsLevel">
+            and waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and data_type='2'
+            )
+            )
+        </if>
+        <if test="2 == userPermissions.dataPermissionsLevel">
+            and waysection_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and data_type='2'
+            )
+        </if>
+        <if test="3 == userPermissions.dataPermissionsLevel">
+            and facilities_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and data_type='2'
+            )
+        </if>
+    </sql>
+
+    <sql id="groupPermission">
+        <if test="1 == userPermissions.dataPermissionsLevel">
+            and org_id in (
+                select distinct(t.parent_id) from t_bdmp_sys_org t where t.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and data_type='2'
+                )
+            )
+        </if>
+        <if test="2 == userPermissions.dataPermissionsLevel">
+            and org_id in (
+                select t.parent_id from t_bdmp_sys_org t where t.org_id in (
+                    select manage_id from t_bdmp_assets_waysection a where a.waysection_id in (
+                        select permissions_id from t_bdmp_sys_user_data b where user_id=#{userPermissions.userId} and data_type='2'
+                    )
+                )
+            )
+        </if>
+        <if test="3 == userPermissions.dataPermissionsLevel">
+            and org_id in(
+                select t.parent_id from t_bdmp_sys_org t where t.org_id in (
+                    select manage_id from t_bdmp_assets_waysection c where c.waysection_id in (
+                        select a.waysection_id from t_bdmp_assets_facilities a where a.facilities_id in (
+                            select permissions_id from t_bdmp_sys_user_data b where user_id=#{userPermissions.userId} and data_type='2'
+                        )
+                    )
+                )
+            )
+        </if>
+    </sql>
+
+    <sql id="orgPermission">
+        <if test="1 == userPermissions.dataPermissionsLevel">
+            and org_id in (
+                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and data_type='2'
+            )
+        </if>
+        <if test="2 == userPermissions.dataPermissionsLevel">
+            and org_id in (
+                select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                    select permissions_id from t_bdmp_sys_user_data b where user_id=#{userPermissions.userId} and data_type='2'
+                )
+            )
+        </if>
+        <if test="3 == userPermissions.dataPermissionsLevel">
+            and org_id in (
+                select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                        select b.permissions_id from t_bdmp_sys_user_data b where user_id=#{userPermissions.userId} and data_type='2'
+                    )
+                )
+            )
+        </if>
+    </sql>
+
+    <sql id="getAssertByNode">
+        <if test="null != commonBo.nodeId and commonBo.nodeId != ''">
+            <if test=" 'group' == commonBo.nodeType">
+                and waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{commonBo.nodeId}
+                )
+                )
+            </if>
+            <if test=" 'org' == commonBo.nodeType">
+                and waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{commonBo.nodeId}
+                )
+            </if>
+            <if test=" 'way' == commonBo.nodeType">
+                and waysection_id = #{commonBo.nodeId}
+            </if>
+            <if test=" 'fac' == commonBo.nodeType">
+                and (facilities_id = #{commonBo.nodeId} or facilities_id in (
+                    select facilities_id from t_bdmp_assets_facilities where parent_id = #{commonBo.nodeId}
+                ))
+            </if>
+            <if test=" 'subFac' == commonBo.nodeType">
+                and facilities_id = #{commonBo.nodeId}
+            </if>
+        </if>
+    </sql>
+
+    <select id="getUserById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.User">
+        select * from t_bdmp_sys_user where user_id = #{userId}
+    </select>
+</mapper>

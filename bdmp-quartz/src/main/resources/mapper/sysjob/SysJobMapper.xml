@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.quartz.modules.sysjob.dao.SysJobDao">
+
+
+    <select id="queryList" resultType="com.rhy.bdmp.quartz.modules.sysjob.domain.bo.SysJobExt">
+        SELECT job.JOB_NAME as jobName,job.JOB_GROUP as jobGroup,job.DESCRIPTION as description,job.JOB_CLASS_NAME as
+        jobClassName,
+        cron.CRON_EXPRESSION as cronExpression,tri.TRIGGER_NAME as triggerName,tri.TRIGGER_STATE as triggerState,
+        job.JOB_NAME as oldJobName,job.JOB_GROUP as oldJobGroup,qsj.datastatusid,qsj.sort,
+        qsj.sys_business_id as sysBusinessId,qsj.url,qsj.header_key headerKey,qsj.header_value headerValue,
+        qsj.request_data requestData,qsj.method_type methodType,qsj.sys_job_id as sysJobId,qsb.name
+        FROM T_BDMP_QUARTZ_JOB_DETAILS AS job
+        LEFT JOIN T_BDMP_QUARTZ_TRIGGERS AS tri ON job.JOB_NAME = tri.JOB_NAME AND job.JOB_GROUP = tri.JOB_GROUP
+        LEFT JOIN T_BDMP_QUARTZ_CRON_TRIGGERS AS cron ON cron.TRIGGER_NAME = tri.TRIGGER_NAME AND cron.TRIGGER_GROUP=
+        tri.JOB_GROUP
+        LEFT JOIN t_bdmp_quartz_sys_job qsj ON qsj.JOB_NAME = job.JOB_NAME
+        left join t_bdmp_quartz_sys_business qsb on qsj.sys_business_id=qsb.business_id
+        WHERE tri.TRIGGER_TYPE = 'CRON'
+        <if test="sysJob.sysBusinessId!=null and sysJob.sysBusinessId!='' ">
+            and qsj.sys_business_id=#{sysJob.sysBusinessId}
+        </if>
+        <if test="sysJob.jobName!=null and sysJob.jobName!='' ">
+            <bind name="jobNameLike" value="'%'+sysJob.jobName+'%'"></bind>
+            and qsj.job_name like #{jobNameLike}
+        </if>
+
+        ORDER BY qsj.sort asc, qsj.create_time desc
+    </select>
+
+    <select id="selectSysJobPage" resultType="com.rhy.bdmp.quartz.modules.sysjob.domain.bo.SysJobExt">
+        SELECT job.JOB_NAME as jobName,job.JOB_GROUP as jobGroup,job.DESCRIPTION as description,job.JOB_CLASS_NAME as
+        jobClassName,
+        cron.CRON_EXPRESSION as cronExpression,tri.TRIGGER_NAME as triggerName,tri.TRIGGER_STATE as triggerState,
+        job.JOB_NAME as oldJobName,job.JOB_GROUP as oldJobGroup,qsj.datastatusid,qsj.sort,
+        qsj.sys_business_id as sysBusinessId,qsj.url,qsj.header_key headerKey,qsj.header_value headerValue,
+        qsj.request_data requestData,qsj.method_type methodType,qsj.sys_job_id as sysJobId,
+        if((qsj.sys_business_id is null or qsj.sys_business_id = ''),(select app_name from basedata.t_bdmp_sys_app where app_id = qsj.app_id),qsb.name) name
+        FROM T_BDMP_QUARTZ_JOB_DETAILS AS job
+        LEFT JOIN T_BDMP_QUARTZ_TRIGGERS AS tri ON job.JOB_NAME = tri.JOB_NAME AND job.JOB_GROUP = tri.JOB_GROUP
+        LEFT JOIN T_BDMP_QUARTZ_CRON_TRIGGERS AS cron ON cron.TRIGGER_NAME = tri.TRIGGER_NAME AND cron.TRIGGER_GROUP=
+        tri.JOB_GROUP
+        LEFT JOIN t_bdmp_quartz_sys_job qsj ON qsj.JOB_NAME = job.JOB_NAME
+        left join t_bdmp_quartz_sys_business qsb on qsj.sys_business_id=qsb.business_id
+        WHERE tri.TRIGGER_TYPE = 'CRON'
+        <if test="sysJobBo.dirId!=null and sysJobBo.dirId!='' ">
+            and (qsj.app_id=#{sysJobBo.dirId} or qsj.sys_business_id=#{sysJobBo.dirId})
+            <if test="userPermissions.isAdmin != 1 and userPermissions.permissionsIds.size() > 0">
+                and qsj.appId in
+                <foreach collection="userPermissions.permissionsIds" item="permissionsId" open="(" separator=","
+                         close=")">
+                    #{permissionsId}
+                </foreach>
+            </if>
+        </if>
+        <if test="sysJobBo.triggerState!=null and sysJobBo.triggerState!='' ">
+            and tri.TRIGGER_STATE = #{sysJobBo.triggerState}
+        </if>
+        <if test="sysJobBo.jobName!=null and sysJobBo.jobName!='' ">
+            <bind value="'%'+sysJobBo.jobName+'%'" name="jobNameLike"></bind>
+            and qsj.job_name like #{jobNameLike}
+        </if>
+        ORDER BY qsj.sort asc, qsj.create_time desc
+    </select>
+    <select id="selectSysJobExtById" resultType="com.rhy.bdmp.quartz.modules.sysjob.domain.bo.SysJobExt">
+        SELECT job.JOB_NAME         as jobName,
+               job.JOB_GROUP        as jobGroup,
+               job.DESCRIPTION      as description,
+               job.JOB_CLASS_NAME   as jobClassName,
+               cron.CRON_EXPRESSION as cronExpression,
+               tri.TRIGGER_NAME     as triggerName,
+               tri.TRIGGER_STATE    as triggerState,
+               job.JOB_NAME         as oldJobName,
+               job.JOB_GROUP        as oldJobGroup,
+               qsj.datastatusid,
+               qsj.sort,
+               qsj.sys_business_id  as sysBusinessId,
+               qsj.url,
+               qsj.header_key          headerKey,
+               qsj.header_value        headerValue,
+               qsj.request_data        requestData,
+               qsj.method_type         methodType,
+               qsj.sys_job_id       as sysJobId,
+               qsb.name
+        FROM T_BDMP_QUARTZ_JOB_DETAILS AS job
+                 LEFT JOIN T_BDMP_QUARTZ_TRIGGERS AS tri
+                           ON job.JOB_NAME = tri.JOB_NAME AND job.JOB_GROUP = tri.JOB_GROUP
+                 LEFT JOIN T_BDMP_QUARTZ_CRON_TRIGGERS AS cron
+                           ON cron.TRIGGER_NAME = tri.TRIGGER_NAME AND cron.TRIGGER_GROUP = tri.JOB_GROUP
+                 LEFT JOIN t_bdmp_quartz_sys_job qsj ON qsj.JOB_NAME = job.JOB_NAME
+                 left join t_bdmp_quartz_sys_business qsb on qsj.sys_business_id = qsb.business_id
+        WHERE tri.TRIGGER_TYPE = 'CRON'
+          and qsj.sys_job_id = #{id}
+
+        ORDER BY qsj.sort asc, qsj.create_time desc
+    </select>
+    <select id="selectSysJobExtByIds" resultType="com.rhy.bdmp.quartz.modules.sysjob.domain.bo.SysJobExt">
+        SELECT job.JOB_NAME as jobName,job.JOB_GROUP as jobGroup,job.DESCRIPTION as description,job.JOB_CLASS_NAME as
+        jobClassName,
+        cron.CRON_EXPRESSION as cronExpression,tri.TRIGGER_NAME as triggerName,tri.TRIGGER_STATE as triggerState,
+        job.JOB_NAME as oldJobName,job.JOB_GROUP as oldJobGroup,qsj.datastatusid,qsj.sort,
+        qsj.sys_business_id as sysBusinessId,qsj.url,qsj.header_key headerKey,qsj.header_value headerValue,
+        qsj.request_data requestData,qsj.method_type methodType,qsj.sys_job_id as sysJobId,
+        qsb.name
+        FROM T_BDMP_QUARTZ_JOB_DETAILS AS job
+        LEFT JOIN T_BDMP_QUARTZ_TRIGGERS AS tri ON job.JOB_NAME = tri.JOB_NAME AND job.JOB_GROUP = tri.JOB_GROUP
+        LEFT JOIN T_BDMP_QUARTZ_CRON_TRIGGERS AS cron ON cron.TRIGGER_NAME = tri.TRIGGER_NAME AND cron.TRIGGER_GROUP=
+        tri.JOB_GROUP
+        LEFT JOIN t_bdmp_quartz_sys_job qsj ON qsj.JOB_NAME = job.JOB_NAME
+        left join t_bdmp_quartz_sys_business qsb on qsj.sys_business_id=qsb.business_id
+        WHERE tri.TRIGGER_TYPE = 'CRON'
+        and qsj.sys_job_id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+
+        ORDER BY qsj.sort asc, qsj.create_time desc
+
+    </select>
+
+</mapper>

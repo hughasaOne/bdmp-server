@@ -1,0 +1,56 @@
+server:
+  port: 60001
+
+spring:
+  application:
+    name: bdmp-auth
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://172.16.10.100:8848
+  datasource:
+    #1、单数据源配置
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://172.16.10.100:3306/bdmp_server?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: 123456
+    # 初始连接数
+    hikari:
+      initial-size: 5
+      # 最小连接数
+      min-idle: 10
+      # 最大连接数
+      max-active: 50
+  #    type: com.zaxxer.hikari.HikariDataSource
+  redis:
+    database: 1
+    host: 127.0.0.1
+    port: 6379
+    password:
+feign:
+  httpclient:
+    enabled: true
+  okhttp:
+    enabled: false
+
+
+# 全局参数设置
+ribbon:
+  ReadTimeout: 120000
+  ConnectTimeout: 10000
+  SocketTimeout: 10000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+
+# 本服务参数配置
+locale:
+  # 登录参数配置
+  login:
+    loginFailureKey: "login:failure:"
+    # 登录失败次数限制
+    loginFailureNumLimit: 5
+    # 登录失败次数限制后多长时间不允许登录认证（单位：分钟）
+    loginFailureTimeMinutesLimit: 5
+    # 超过登录失败次数后的提示
+    loginFailureNumLimitMsg: "连续登录失败5次,请5分钟后再试"
+

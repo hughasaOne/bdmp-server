@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.quartz.modules.sysbusiness.dao.SysBusinessDao">
+
+
+    <select id="findByPIds" resultType="com.rhy.bdmp.quartz.modules.sysbusiness.domain.bo.SysBusinessExt">
+        SELECT business_id, parent_id, name, description, sort,datastatusid,
+        create_by, create_time, update_by, icon, update_time,
+        CASE (select count(1) from t_bdmp_quartz_sys_business where parent_id =qsb.business_id ) when 0 THEN 0 else 1
+        end as hasChildren
+        FROM t_bdmp_quartz_sys_business qsb
+        where parent_id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+
+        ORDER BY sort asc, create_time desc
+
+    </select>
+    <select id="findByUserId" resultType="com.rhy.bdmp.quartz.modules.sysbusiness.domain.vo.SysBusinessExtVo">
+        SELECT
+        app.app_id id,
+        app.app_name label,
+        '0' parent_id,
+        '' business_id,
+        app.app_id,
+        'app' nodeType,
+        app.sort
+        FROM
+        basedata.t_bdmp_sys_app app
+        <if test="!isAdmin">
+            WHERE app.app_id IN (
+            SELECT permissions_id FROM basedata.t_bdmp_sys_user_data
+            WHERE user_id = #{userId} AND data_type = 1 )
+        </if>
+        UNION
+        SELECT
+        business.business_id id,
+        business.`name` label,
+        business.parent_id,
+        business.business_id,
+        business.app_id,
+        'dir' nodeType,
+        business.sort
+        FROM
+        basedata.t_bdmp_sys_app app
+        INNER JOIN quartz.t_bdmp_quartz_sys_business business ON app.app_id = business.app_id
+        <if test="!isAdmin">
+            WHERE app.app_id IN (
+            SELECT permissions_id FROM basedata.t_bdmp_sys_user_data
+            WHERE user_id = #{userId} AND data_type = 1 )
+        </if>
+    </select>
+
+    <select id="findByParam" resultType="com.rhy.bdmp.quartz.modules.sysbusiness.domain.bo.SysBusinessExt">
+        SELECT business_id, parent_id, name, description, sort, create_by, create_time, update_by, icon, update_time
+        FROM t_bdmp_quartz_sys_business
+        <where>
+            <if test="sysBusiness.parentId!=null and sysBusiness.parentId!=''">
+                and parent_id=#{sysBusiness.parentId}
+            </if>
+            <if test="sysBusiness.name!=null and sysBusiness.name!=''">
+                <bind value="'%'+sysBusiness.name+'%'" name="nameLike"/>
+                and name like #{nameLike}
+            </if>
+
+        </where>
+    </select>
+</mapper>

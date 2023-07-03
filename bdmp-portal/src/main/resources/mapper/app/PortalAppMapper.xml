@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.portal.modules.app.dao.PortalAppDao">
+
+    <!--根据用户查找应用访问权限-->
+    <select id="findAppByUser" resultType="com.rhy.bdmp.base.modules.sys.domain.po.App">
+        <choose>
+            <when test="isUseUserPermissions">
+                SELECT
+                a.app_id,a.app_name,a.app_url,a.app_icon,a.app_img,a.description,a.app_type_id,a.wait_do_url,a.sort,a.datastatusid,a.create_by,a.create_time,a.update_by,a.update_time
+                FROM t_bdmp_sys_app a,
+                ( SELECT app_id FROM t_bdmp_sys_user_app WHERE user_id = #{userId} ) b
+                WHERE
+                a.app_id = b.app_id
+                AND a.datastatusid = 1
+                ORDER BY a.sort asc, a.create_time desc
+            </when>
+            <otherwise>
+                SELECT
+                app_id,app_name,app_url,app_icon,app_img,description,app_type_id,wait_do_url,sort,datastatusid,create_by,create_time,update_by,update_time
+                FROM t_bdmp_sys_app
+                WHERE datastatusid = 1
+                ORDER BY sort asc, create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

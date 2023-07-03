@@ -1,0 +1,30 @@
+2023-03-03 14:59:27.801 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 14:59:28.591 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_sys_user where user_id = ?
+2023-03-03 14:59:28.731 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_user WHERE user_id = ? AND t_bdmp_sys_user.tenant_id = 'basedata'
+2023-03-03 14:59:28.747 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_user WHERE user_id = ? AND t_bdmp_sys_user.tenant_id = 'basedata'
+2023-03-03 14:59:29.081 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:26:32.746 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:26:33.262 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:26:33.401 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT ROUND(sum(way.mileage), 4) AS totalMileage, count(*) AS wayNum FROM t_bdmp_assets_waysection way WHERE way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-03 16:26:33.430 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT ROUND(sum(way.mileage), 4) AS totalMileage, count(*) AS wayNum FROM t_bdmp_assets_waysection way WHERE way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-03 16:26:33.695 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:30:16.120 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:30:16.165 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:30:16.171 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT ROUND(sum(way.mileage), 4) AS totalMileage, count(*) AS wayNum FROM t_bdmp_assets_waysection way WHERE way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-03 16:30:16.178 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT ROUND(sum(way.mileage), 4) AS totalMileage, count(*) AS wayNum FROM t_bdmp_assets_waysection way WHERE way.manage_id = ? AND way.tenant_id = 'basedata'
+2023-03-03 16:32:04.223 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:32:04.452 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:32:04.457 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:32:04.457 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:51:11.099 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-03 16:51:11.109 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:51:11.110 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?
+2023-03-03 16:51:11.110 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+         WHERE  way.manage_id = ?

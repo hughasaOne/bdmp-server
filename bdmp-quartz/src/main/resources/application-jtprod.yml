@@ -1,0 +1,85 @@
+server:
+  port: 60006
+
+spring:
+  application:
+    name: bdmp-quartz
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://100.65.20.39:8848
+  datasource:
+    multiple-datasource:
+      - name: default
+        driverClassName: org.gjt.mm.mysql.Driver
+        url: jdbc:mysql://100.65.20.2:3306/quartz?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+        username: root
+        password: rhyDB@2022@pingchas0418!!qwe
+      - name: basedata
+        driverClassName: org.gjt.mm.mysql.Driver
+        url: jdbc:mysql://100.65.20.2:3306/basedata?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+        username: root
+        password: rhyDB@2022@pingchas0418!!qwe
+        # 初始连接数
+        hikari:
+          initial-size: 5
+          # 最小连接数
+          min-idle: 10
+          # 最大连接数
+          max-active: 50
+
+    #Quartz配置
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: clusteredScheduler
+            instanceId: AUTO
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            dataSource: quartzDataSource
+            #tablePrefix: QRTZ_
+            tablePrefix: T_BDMP_QUARTZ_
+            #打开集群配置
+            isClustered: true
+            #设置集群检查间隔100s
+            clusterCheckinInterval: 10000
+            useProperties: false
+        threadPool:
+          class: org.quartz.simpl.SimpleThreadPool
+          threadCount: 10
+          threadPriority: 5
+          threadsInheritContextClassLoaderOfInitializingThread: true
+
+
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+  #实体扫描，多个package用逗号或者分号分隔
+  type-aliases-package: com.rhy.bcp.logging.domain.po,com.rhy.bdmp.quartz.modules.*.domain.po
+  global-config:
+    db-config:
+      #主键类型  0:"数据库ID自增",1:"无主键设置",2:"用户输入ID",3:"全局唯一ID (数字类型唯一ID)", 4:"全局唯一ID UUID";
+      id-type: ASSIGN_ID
+      #是否开启大写命名，默认不开启
+      capital-mode: true
+      #逻辑删除配置
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志保留时长,单位天
+logs_time_length: 30
+
+
+
+
+
+

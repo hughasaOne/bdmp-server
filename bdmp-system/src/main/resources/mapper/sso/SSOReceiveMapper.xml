@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.system.modules.sso.dao.SSOReceiveDao">
+
+    <!-- 查询系统参数中基础数据管理平台的首页地址 -->
+    <select id="queryHoneUrl" resultType="java.lang.String">
+        SELECT
+            xtcs_value
+        FROM
+            t_bdmp_xtcs
+        WHERE
+            xtcs_key = 'bdmp_home_url'
+    </select>
+</mapper>

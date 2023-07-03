@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.AssetsPermissionsTreeDao">
+
+    <!--获取台账资源-集团-->
+    <select id="getAssetsGroup" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.OrgShortVO">
+        <choose>
+            <when test="isUseUserPermissions">
+                select
+                    org_id,org_name,org_short_name,parent_id,org_type,sort,
+                    IF((select count(*) from t_bdmp_sys_org where parent_id=p_org.org_id )>0,0,1) as isLeaf
+                   from t_bdmp_sys_org p_org where p_org.org_type = '000200'
+                <if test="1 == dataPermissionsLevel">
+                    and p_org.org_id in (
+                        select distinct(t.parent_id) from t_bdmp_sys_org t where t.org_id in (
+                            select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and p_org.org_id in (
+                        select t.parent_id from t_bdmp_sys_org t where t.org_id in (
+                            select manage_id from t_bdmp_assets_waysection a where a.waysection_id in (
+                                select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                            )
+                        )
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and p_org.org_id in(
+                        select t.parent_id from t_bdmp_sys_org t where t.org_id in (
+                            select manage_id from t_bdmp_assets_waysection c where c.waysection_id in (
+                                select a.waysection_id from t_bdmp_assets_facilities a where a.facilities_id in (
+                                    select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                                )
+                            )
+                        )
+                    )
+                </if>
+                order by p_org.sort asc,p_org.create_time desc
+            </when>
+            <otherwise>
+                select
+                    org_id,org_name,org_short_name,parent_id,org_type,sort,
+                    IF((select count(*) from t_bdmp_sys_org where parent_id=p_org.org_id )>0,0,1) as isLeaf
+                from t_bdmp_sys_org p_org where p_org.org_type = '000200'
+                order by p_org.sort asc,p_org.create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <!--获取台账资源-组织-->
+    <select id="getAssetsOrg" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.OrgShortVO">
+        <choose>
+            <when test="isUseUserPermissions">
+                select
+                    org_id,org_name,org_short_name,parent_id,org_type,sort,
+                    IF((select count(*) from t_bdmp_assets_waysection where manage_id=org.org_id )>0,0,1) as isLeaf
+                from t_bdmp_sys_org org where org.org_type = '000300'
+                <if test="1 == dataPermissionsLevel">
+                    and org.org_id in (
+                        select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and org.org_id in (
+                        select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                            select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and org.org_id in (
+                        select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                            select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                                select b.permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                            )
+                        )
+                    )
+                </if>
+                order by org.sort asc, org.create_time desc
+            </when>
+            <otherwise>
+                select
+                    org_id,org_name,org_short_name,parent_id,org_type,sort,
+                    IF((select count(*) from t_bdmp_assets_waysection where manage_id=org.org_id )>0,0,1) as isLeaf
+                from t_bdmp_sys_org org where org_type = '000300'
+                order by sort asc, create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--获取台账资源-路段-->
+    <select id="getAssetsWay" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.WayShortVO">
+        <choose>
+            <when test="isUseUserPermissions">
+                select
+                    waysection_id,waysection_name,waysection_s_name,manage_id,sort,
+                    IF((select count(*) from t_bdmp_assets_facilities where waysection_id=way.waysection_id )>0,0,1) as isLeaf
+               from t_bdmp_assets_waysection way
+                <where>
+                    <if test="1 == dataPermissionsLevel">
+                        and way.manage_id in(
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and way.waysection_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and way.waysection_id in (
+                            select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                            )
+                        )
+                    </if>
+                </where>
+                order by way.sort asc, way.create_time desc
+            </when>
+            <otherwise>
+                select
+                    waysection_id,waysection_name,waysection_s_name,manage_id,sort,
+                    IF((select count(*) from t_bdmp_assets_facilities where waysection_id=way.waysection_id )>0,0,1) as isLeaf
+                from t_bdmp_assets_waysection way
+                order by way.sort asc, way.create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--获取台账资源-设施(只到1级)-->
+    <select id="getAssetsFac" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.FacShortVO">
+        <choose>
+            <when test="isUseUserPermissions">
+                select
+                    facilities_id,facilities_name,parent_id,waysection_id,facilities_type,facilities_code,sort
+                from t_bdmp_assets_facilities fac
+                where (fac.parent_id is null or fac.parent_id = '')
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                        select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                order by fac.sort asc,fac.create_time desc
+            </when>
+            <otherwise>
+                select
+                    facilities_id,facilities_name,parent_id,waysection_id,facilities_type,facilities_code,sort
+                from t_bdmp_assets_facilities fac
+                where (fac.parent_id is null or fac.parent_id = '')
+                order by fac.sort asc,fac.create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--获取台账资源-子设施(只到2级)-->
+    <select id="getAssetsFacChildren" resultType="com.rhy.bdmp.base.modules.assets.domain.po.Facilities">
+        <choose>
+            <when test="isUseUserPermissions">
+                select
+                    facilities_id,facilities_name,sort,parent_id,waysection_id,facilities_type,facilities_code,longitude,latitude
+                from t_bdmp_assets_facilities c_fac
+                where c_fac.parent_id in
+                      (select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+                    <if test="1 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                            )
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and fac.facilities_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    ) order by c_fac.sort asc,c_fac.create_time desc
+            </when>
+            <otherwise>
+                select facilities_id,facilities_name,sort,parent_id,waysection_id,facilities_type,facilities_code,longitude,latitude from t_bdmp_assets_facilities
+                where (parent_id is not null and parent_id != '')
+                order by sort asc,create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getUserById" resultType="com.rhy.bdmp.system.modules.assets.domain.po.User">
+        select * from t_bdmp_sys_user where user_id = #{userId}
+    </select>
+
+    <!-- 根据路段id 获取设施 -->
+    <select id="getFacByWayId" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.FacShortVO">
+        select
+            facilities_id,facilities_name,parent_id,waysection_id,facilities_type,facilities_code,sort,
+            IF((select count(*) from t_bdmp_assets_facilities c_fac where c_fac.parent_id=fac.facilities_id )>0,0,1) as isLeaf
+        from t_bdmp_assets_facilities fac
+        where (fac.parent_id is null or fac.parent_id = '') and fac.waysection_id = #{waysectionId}
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        order by fac.sort asc,fac.create_time desc
+    </select>
+
+    <!-- 根据设施id 获取子设施 -->
+    <select id="getChildFacilities" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.FacShortVO">
+        select
+            facilities_id,facilities_name,parent_id,waysection_id,facilities_type,facilities_code,sort,
+            1 as isLeaf
+        from t_bdmp_assets_facilities c_fac
+        where c_fac.parent_id = #{facilitiesId} and c_fac.parent_id  in(
+            select facilities_id from t_bdmp_assets_facilities fac
+            where fac.facilities_id = #{facilitiesId}
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                        select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+        ) order by c_fac.sort asc,c_fac.create_time desc
+    </select>
+
+    <!--获取用户组织机构权限树-->
+    <select id="getOrgList" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Org">
+        select org_id,org_short_name,parent_id,sort from t_bdmp_sys_org
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and org_id in (
+                        select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='3'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and org_id in (
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in (
+                            select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='3'
+                        )
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and org_id in(
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in (
+                            select waysection_id from t_bdmp_assets_facilities where facilities_id in (
+                                select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='3'
+                            )
+                        )
+                    )
+                </if>
+                order by sort asc,create_time desc
+            </if>
+        </where>
+    </select>
+
+    <select id="asyncTree" resultType="java.util.Map">
+        (select org_id as id,org_name as label,parent_id as parentId,org_short_name as shortName,org_type as type,
+            if(org_type = '000200',0,1) as nodeType,sort as weight,
+            if((select count(*) from t_bdmp_sys_org where parent_id = org.org_id) > 0,false,true ) as isLeaf
+        from t_bdmp_sys_org org where parent_id = #{search} or (org_type = '000200' or org_type = '000300') and locate(#{search},org_name) > 0 order by sort asc,update_time desc)
+        union all
+        (select waysection_id as id,waysection_name as label,manage_id as parentId,waysection_s_name as shortName,"way" as type,"2" as nodeType,
+           sort as weight,
+            if((select count(*) from t_bdmp_assets_facilities where waysection_id = way.waysection_id) > 0,false,true ) as isLeaf
+        from t_bdmp_assets_waysection way where manage_id = #{search} or locate(#{search},waysection_name) > 0 order by sort asc,update_time desc)
+        union all
+        (select facilities_id as id,facilities_name as label,waysection_id as parentId,facilities_name as shortName,facilities_type as type,
+            if ((parent_id is null or parent_id = ''),"3","4") as nodeType,sort as weight,
+            if((select count(*) from t_bdmp_assets_facilities where parent_id = fac.facilities_id),false,true ) as isLeaf
+        from t_bdmp_assets_facilities fac where waysection_id = #{search} or parent_id = #{search} or locate(#{search},facilities_name) > 0 order by sort asc,update_time desc)
+    </select>
+
+    <select id="getPermissionsLevel1" resultType="java.lang.String">
+        select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+        union all
+        select parent_id from t_bdmp_sys_org where org_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+        union all
+        select waysection_id as id from t_bdmp_assets_waysection where manage_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+        union all
+        select facilities_id as id from t_bdmp_assets_facilities where waysection_id in (
+                select waysection_id as id from t_bdmp_assets_waysection where manage_id in (
+                    select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+                )
+            )
+    </select>
+    <select id="getPermissionsLevel2" resultType="java.lang.String">
+        select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+        union all
+        select manage_id as id from t_bdmp_assets_waysection where waysection_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+        union all
+        select parent_id as id from t_bdmp_sys_org where org_id in (
+                select manage_id as id from t_bdmp_assets_waysection where waysection_id in (
+                    select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+                )
+            )
+        union all
+        select facilities_id as id from t_bdmp_assets_facilities where waysection_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+    </select>
+    <select id="getPermissionsLevel3" resultType="java.lang.String">
+        select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+        union all
+        select waysection_id as id from t_bdmp_assets_facilities where facilities_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+        union all
+        select manage_id as id from t_bdmp_assets_waysection where waysection_id in (
+                select waysection_id as id from t_bdmp_assets_facilities where facilities_id in (
+                    select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+                )
+            )
+        union all
+        select parent_id as id from t_bdmp_sys_org where org_id in (
+                select manage_id as id from t_bdmp_assets_waysection where waysection_id in (
+                    select waysection_id as id from t_bdmp_assets_facilities where facilities_id in (
+                        select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+                    )
+                )
+            )
+        select facilities_id as id from t_bdmp_assets_facilities where parent_id in (
+                select permissions_id as id from t_bdmp_sys_user_data where user_id = #{userId} and data_type = 2
+            )
+    </select>
+
+</mapper>

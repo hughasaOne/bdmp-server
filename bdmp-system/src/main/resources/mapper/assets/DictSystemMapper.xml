@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DictSystemDao">
+
+    <select id="getDictSystem" resultType="java.util.Map">
+        select system_id as systemId,
+               system_no as systemNo,
+               system_serial as systemSerial,
+               system_name as systemName,
+               system_type as systemType,
+               parent_id as parentId,
+               (select system_name from t_bdmp_assets_dict_system where system_id = s1.parent_id) as parentName,
+               sort,
+               if((select count(*) from t_bdmp_assets_dict_system where parent_id = s1.system_id) > 0, true,
+                false) as hasChild
+        from t_bdmp_assets_dict_system s1
+        <where>
+            <if test="dictBO.isDirectory">
+                and (parent_id is null or parent_id = '')
+            </if>
+            <if test="null != dictBO.parentId and '' != dictBO.parentId">
+                and parent_id = #{dictBO.parentId}
+            </if>
+            <if test="null != dictBO.name and '' != dictBO.name">
+                and system_name like concat('%',#{dictBO.name},'%')
+            </if>
+            <if test="null != dictBO.code and '' != dictBO.code">
+                and system_no like concat('%',#{dictBO.code},'%')
+            </if>
+            <if test="null != dictBO.id and '' != dictBO.id">
+                and system_id = #{dictBO.id}
+            </if>
+        </where>
+    </select>
+</mapper>

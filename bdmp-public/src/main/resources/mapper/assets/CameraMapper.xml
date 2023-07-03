@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.CameraDao">
+
+    <select id="listCameraResourceYt" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceYt">
+        SELECT
+        yt.id,
+        yt.NAME,
+        yt.parent_id,
+        yt.type,
+        yt.car_sum,
+        yt.camera_level,
+        yt.location_type,
+        ( CASE WHEN `status` = '10' THEN 1 WHEN `status` = '20' THEN 0 ELSE 1 END ) AS STATUS,
+        org.org_short_name compName,
+        org.org_id compId,
+        yt.has_ptz,
+        yt.coord_x,
+        yt.coord_y,
+        yt.way_id,
+        yt.way_name,
+        yt.geographyinfo_id,
+        yt.location,
+        yt.sort,
+        yt.datastatusid,
+        yt.create_by,
+        yt.create_time,
+        yt.update_by,
+        yt.update_time,
+        yt.center_off_no
+        from t_bdmp_assets_camera_resource_yt yt left join
+            (select org.org_id,org.org_short_name,tbaw.waysection_id from
+                        t_bdmp_assets_waysection tbaw
+                            inner join t_bdmp_sys_org org on tbaw.manage_id = org.org_id) org
+       on yt.way_id = org.waysection_id
+        <where>
+            and type = '20'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and yt.way_id in (
+                        select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and yt.way_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and yt.geographyinfo_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and yt.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                        select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                    )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and yt.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and yt.way_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and yt.geographyinfo_id = #{orgId}
+            </if>
+            <if test="2 == userType">
+                and yt.`status`='10' and yt.location_type != '12'
+            </if>
+        </where>
+    </select>
+
+    <select id="listCameraIdYt" resultType="java.util.Map">
+        select id from t_bdmp_assets_camera_resource_yt yt
+        <where>
+            and type = '20'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and yt.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and yt.way_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and yt.geographyinfo_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and yt.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and yt.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and yt.way_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and yt.geographyinfo_id = #{orgId}
+            </if>
+            <if test="2 == userType">
+                and yt.`status`='10' and yt.location_type != '12'
+            </if>
+        </where>
+    </select>
+
+    <select id="listCameraResourceSy" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceSy">
+        SELECT
+        sy.id,
+        sy.NAME,
+        sy.parent_id,
+        sy.type,
+        sy.car_sum,
+        sy.camera_level,
+        sy.location_type,
+        ( CASE WHEN `status` = '10' THEN 1 WHEN `status` = '20' THEN 0 ELSE 1 END ) AS STATUS,
+        org.org_short_name compName,
+        org.org_id compId,
+        sy.has_ptz,
+        sy.coord_x,
+        sy.coord_y,
+        sy.way_id,
+        sy.way_name,
+        sy.geographyinfo_id,
+        sy.location,
+        sy.sort,
+        sy.datastatusid,
+        sy.create_by,
+        sy.create_time,
+        sy.update_by,
+        sy.update_time
+        from t_bdmp_assets_camera_resource_sy sy left join
+        (select org.org_id,org.org_short_name,tbaw.waysection_id from
+        t_bdmp_assets_waysection tbaw
+        inner join t_bdmp_sys_org org on tbaw.manage_id = org.org_id) org
+        on sy.way_id = org.waysection_id
+        <where>
+            and type = '20'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and sy.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and sy.way_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and sy.geographyinfo_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and sy.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and sy.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and sy.way_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and sy.geographyinfo_id = #{orgId}
+            </if>
+            <if test="2 == userType">
+                and sy.`status`='10' and sy.location_type != '12'
+            </if>
+        </where>
+    </select>
+
+    <!-- 通过id获取视频资源详情(科技) -->
+    <select id="selectCameraYtById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceYt">
+        select id,name,parent_id,type,car_sum,camera_level,
+        (case when `status`='10' then 1 when `status`='20' then 0 else 1 end) as status,
+        has_ptz,coord_x,coord_y,way_id,way_name,geographyinfo_id,location,sort,datastatusid,create_by,create_time,update_by,update_time,
+        (select org_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as compName,
+        (select org_short_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as shortName,
+        (select ori_waynet_id from t_bdmp_assets_waysection where waysection_id = way_id) as oriWaysectionNo
+        from t_bdmp_assets_camera_resource_yt where id = #{id}
+    </select>
+
+    <select id="selectCameraSyById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceSy">
+        select id,name,parent_id,type,car_sum,camera_level,
+               (case when `status`='10' then 1 when `status`='20' then 0 else 1 end) as status,
+               has_ptz,coord_x,coord_y,way_id,way_name,geographyinfo_id,location,sort,datastatusid,create_by,create_time,update_by,update_time,
+               (select org_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as compName,
+               (select org_short_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as shortName,
+               (select ori_waynet_id from t_bdmp_assets_waysection where waysection_id = way_id) as oriWaysectionNo,ip
+        from t_bdmp_assets_camera_resource_sy where id = #{id}
+    </select>
+
+    <!-- 通过地理位置id获取腾路视频资源列表 -->
+    <select id="listCameraResourceTl" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceTl">
+        SELECT
+        tl.camera_id,
+        tl.camera_name,
+        tl.device_type,
+        tl.camera_ip,
+        tl.longitude,
+        tl.latitude,
+        tl.way_id,
+        tl.way_name,
+        tl.geographyinfo_id,
+        tl.location,
+        tl.info_name,
+        tl.location_type,
+        ( CASE WHEN `online_status` = '1' THEN 1 WHEN `online_status` = '2' THEN 0 ELSE 1 END ) AS online_status,
+        org.org_id compId,
+        org.org_short_name compName,
+        tl.sort,
+        tl.datastatusid,
+        tl.create_by,
+        tl.create_time,
+        tl.update_by,
+        tl.update_time
+        from t_bdmp_assets_camera_resource_tl tl
+        left join
+        (select org.org_id,org.org_short_name,tbaw.waysection_id from
+        t_bdmp_assets_waysection tbaw
+        inner join t_bdmp_sys_org org on tbaw.manage_id = org.org_id) org
+        on tl.way_id = org.waysection_id
+        <where>
+            and tl.device_type != '6'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and tl.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and tl.way_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and tl.geographyinfo_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and tl.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and tl.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and tl.way_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and tl.geographyinfo_id = #{orgId}
+            </if>
+            <if test="2 == userType">
+                and tl.`online_status`='1' and (tl.location_type != '12' or tl.location_type is null)
+            </if>
+        </where>
+    </select>
+
+
+    <!-- 通过地理位置id获取腾路视频资源列表 -->
+    <select id="listCameraIdTl" resultType="java.util.Map">
+        select camera_id as cameraId from t_bdmp_assets_camera_resource_tl tl
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and tl.way_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and tl.way_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and tl.geographyinfo_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and tl.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and tl.way_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and tl.way_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and tl.geographyinfo_id = #{orgId}
+            </if>
+            <if test="2 == userType">
+                and tl.`online_status`='1' and tl.location_type != '12'
+            </if>
+        </where>
+    </select>
+
+    <!-- 通过视频资源id获取腾路视频资源 -->
+    <select id="getCameraResourceTlById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.CameraResourceTl">
+        select camera_id,camera_name,device_type,camera_ip,longitude,latitude,way_id,way_name,geographyinfo_id,location,info_name,
+        (case when `online_status`='1' then 1 when `online_status`='2' then 0 else 1 end) as online_status,
+        sort,datastatusid,create_by,create_time,update_by,update_time,
+        (select org_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as compName,
+        (select org_short_name from t_bdmp_sys_org where org_id =(select manage_id from t_bdmp_assets_waysection where waysection_id = way_id)) as shortName,
+        (select ori_waynet_id from t_bdmp_assets_waysection where waysection_id = way_id) as oriWaysectionNo
+        from t_bdmp_assets_camera_resource_tl where camera_id = #{id}
+    </select>
+
+
+    <!--获取云台资源目录及摄像头：集团-->
+    <select id="getOrgGroup" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.CameraDirVo">
+        select
+        org_id id, org_short_name name, parent_id parentId, 0 nodeType, 1 hasChild
+        from
+        t_bdmp_sys_org where org_id = #{parentId}
+    </select>
+
+    <!--获取云台资源目录及摄像头：运营公司-->
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.CameraDirVo">
+        SELECT
+            org_id as id, org_short_name as name, parent_id as parentId, 1 as nodeType, 1 hasChild
+        FROM
+            t_bdmp_sys_org
+        WHERE org_type='000300' and org_id IN (
+            SELECT
+                manage_id
+            FROM
+            (
+            SELECT
+                yt.*, fac.facilities_name, way.manage_id
+            FROM
+                ( SELECT * FROM t_bdmp_assets_camera_resource_yt WHERE type = '20' AND way_id IS NOT NULL AND way_id != '' AND geographyinfo_id IS NOT NULL AND geographyinfo_id != '' ) yt
+            LEFT JOIN
+                t_bdmp_assets_facilities fac ON yt.geographyinfo_id = fac.facilities_id
+            LEFT JOIN
+                t_bdmp_assets_waysection way ON yt.way_id = way.waysection_id
+            ) camera
+            <where>
+                <if test="isUseUserPermissions">
+                    <if test="1 == dataPermissionsLevel">
+                        and manage_id in (
+                        select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and way_id in (
+                        select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and geographyinfo_id in (
+                        select b.permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                </if>
+            </where>
+        ) order by sort asc
+    </select>
+
+    <!--获取云台资源目录及摄像头：路段、设施、摄像头-->
+    <select id="getCameraResource" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.CameraDirVo">
+        select
+            <if test="1 == nodeType">
+                distinct way_id as id,way_name as name,manage_id as parentId, 2 as nodeType, 1 hasChild
+            </if>
+            <if test="2 == nodeType">
+                distinct geographyinfo_id as id,facilities_name as name, way_id as parentId,3 as nodeType, 1 hasChild
+            </if>
+            <if test="3 == nodeType">
+                distinct id,name,geographyinfo_id as parentId, 4 as nodeType, 0 hasChild
+            </if>
+        from
+        (
+            SELECT yt.*, fac.facilities_name, way.manage_id
+            FROM
+                ( SELECT * FROM t_bdmp_assets_camera_resource_yt WHERE type = '20' AND way_id IS NOT NULL AND way_id != '' AND geographyinfo_id IS NOT NULL AND geographyinfo_id != '' ) yt
+            LEFT JOIN
+                t_bdmp_assets_facilities fac ON yt.geographyinfo_id = fac.facilities_id
+            LEFT JOIN
+                t_bdmp_assets_waysection way ON yt.way_id = way.waysection_id
+        ) camera
+        where
+            <if test="1 == nodeType">
+                manage_id = #{nodeId}
+            </if>
+            <if test="2 == nodeType">
+                way_id = #{nodeId}
+            </if>
+            <if test="3 == nodeType">
+                geographyinfo_id = #{nodeId}
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and manage_id in (
+                        select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and way_id in (
+                        select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and geographyinfo_id in (
+                        select b.permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+    </select>
+
+
+</mapper>

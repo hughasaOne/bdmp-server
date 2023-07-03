@@ -1,0 +1,213 @@
+server:
+  port: 60000
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: bdmp-gateway
+  datasource:
+    driverClassName: org.gjt.mm.mysql.Driver
+    url: jdbc:mysql://100.65.20.2:3306/basedata?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&autoReconnect=true&failOverReadOnly=false
+    username: root
+    password: rhyDB@2022@pingchas0418!!qwe
+  servlet:
+    multipart:
+      max-file-size: 2048MB
+      max-request-size: 2048MB
+      enabled: true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://100.65.20.39:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启从注册中心动态创建路由的功能
+          lower-case-service-id: true #使用小写服务名，默认是大写
+      routes:  #配置路由规则
+        - id: bdmp-auth-route
+          uri: lb://bdmp-auth
+          predicates:
+            - Path=/bdmp/oauth/**
+          filters:
+            - StripPrefix=1
+
+        - id: bdmp-system-route
+          uri: lb://bdmp-system
+          predicates:
+            - Path=/bdmp/system/**
+          filters:
+            - StripPrefix=0
+
+        - id: bdmp-portal-route
+          uri: lb://bdmp-portal
+          predicates:
+            - Path=/bdmp/portal/**
+          filters:
+            - StripPrefix=0
+
+        - id: bdmp-public-route
+          uri: lb://bdmp-public
+          predicates:
+            - Path=/bdmp/public/**
+          filters:
+            - StripPrefix=0
+
+        - id: bdmp-quartz-route
+          uri: lb://bdmp-quartz
+          predicates:
+            - Path=/bdmp/quartz/**
+          filters:
+            - StripPrefix=0
+
+        - id: bdmp-collect-route
+          uri: lb://bdmp-collect
+          predicates:
+            - Path=/bdmp/collect/**
+          filters:
+            - StripPrefix=0
+
+        - id: ydjk-public-route
+          uri: lb://ydjk-public
+          predicates:
+            - Path=/ydjk/public/**
+          filters:
+            - StripPrefix=0
+
+        - id: ecs-public-route
+          uri: lb://ecs-public
+          predicates:
+            - Path=/ecs/public/**
+          filters:
+            - StripPrefix=0
+            
+        - id: ecs-system-route
+          uri: lb://ecs-system
+          predicates:
+            - Path=/ecs/system/**
+          filters:
+            - StripPrefix=0
+
+        - id: ecs-ipwtoe-route
+          uri: lb://ecs-system
+          predicates:
+            - Path=/Main/api/wtoe/devicestatus
+          filters:
+            - StripPrefix=0
+        # 临时配置转发
+        - id: ecs-ipwtoe-route-temp
+          uri: lb://ecs-system
+          predicates:
+            - Path=/ecs/api/**
+          filters:
+            - StripPrefix=0
+        # 主题报表(烽火)
+        - id: jt-report-route
+          uri: lb://jt-report
+          predicates:
+            - Path=/report/**
+          filters:
+            - StripPrefix=0
+
+        - id: aibox-mq-route
+          uri: lb://aibox-mq
+          predicates:
+            - Path=/aibox/mq/**
+          filters:
+            - StripPrefix=0
+
+        - id: aibox-system-route
+          uri: lb://aibox-system
+          predicates:
+            - Path=/aibox/system/**
+          filters:
+            - StripPrefix=0
+
+        # 路网监测(光谷信息)
+        - id: jtkjcloud-event-monitor-route
+          uri: lb://jtkjcloud-event-monitor
+          predicates:
+            - Path=/prod/hbjttz/event/**
+          filters:
+            - StripPrefix=0
+
+        # 路网监测(光谷信息)
+        - id: jtkjcloud-roadnetwork-monitor-route
+          uri: lb://jtkjcloud-roadnetwork-monitor
+          predicates:
+            - Path=/prod/hbjttz/roadnetwork/**
+          filters:
+            - StripPrefix=0
+
+        # 收费稽核（易购）
+        - id: order-center-route
+          uri: lb://order-center
+          predicates:
+            - Path=/order/**
+          filters:
+            - StripPrefix=0
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: 'http://100.65.20.19:60000/bdmp/oauth/publicKey'
+  redis:
+    database: 1
+    host: 100.65.20.3
+    port: 6379
+    password: rhy..dev..2021@redis
+
+# 配置白名单路径
+whitelist:
+  urls:
+    #  基础数据管理平台
+    - "/bdmp/oauth/token"
+    - "/bdmp/oauth/publicKey"
+    - "/bdmp/public/auth/token"
+    - "/bdmp/public/auth/test"
+    - "/bdmp/oauth/test"
+    - "/bdmp/system/sys/plupload/**"
+    - "/bdmp/system/sso/receivePortalRequest"
+    - "/bdmp/system/assets/device/downloadDevice"
+
+    #  智能终端箱
+    - "/aibox/mq/ws/**"
+    - "/aibox/system/file/download/**"
+    - "/aibox/system/devrecord/exportDevice"
+    - "/aibox/system/device/analysis/exportHomeData"
+
+    #  应急指挥
+    - "/ecs/system/ws/**"
+    - "/ecs/system/resource/archive/download/**"
+    - "/ecs/system/file/plupload/**"
+    - "/Main/api/wtoe/devicestatus"
+    - "/ecs/api/devicestatus"
+    - "/ecs/api/recvcall"
+    - "/ecs/system/event/report/exportHistoryEventReport"
+
+    # 应急指挥临时
+    - "/web/api/devicestatus"
+    - "/web/api/recvcall"
+
+    # 路网监测-获取天气信息
+    - "/prod/hbjttz/roadnetwork/new/weather/getCurReqWeather"
+    - "/prod/hbjttz/roadnetwork/new/weather/getCmaWeatherAlarmListByAdcode"
+    - "/prod/hbjttz/roadnetwork/new/weather/getCurReqWeatherByDistrictId"
+
+# 全局参数设置
+ribbon:
+  ReadTimeout: 120000
+  ConnectTimeout: 10000
+  SocketTimeout: 10000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 1
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 40000

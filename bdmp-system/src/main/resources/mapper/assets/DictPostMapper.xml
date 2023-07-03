@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DictPostDao">
+    <select id="getDictPost" resultType="java.util.Map">
+        select post_id as postId,
+        name,
+        code,
+        org_type_code orgTypeCode,
+        (select name from t_bdmp_assets_dict where code = post.org_type_code) as orgTypeName,
+        sort,
+        datastatusid,
+        date_format(update_time,'%Y-%m-%d %H:%i:%s') as updateTime
+        from t_bdmp_assets_dict_post post
+        <where>
+            <if test="null != dictBO.id and '' != dictBO.id">
+                and post_id = #{dictBO.id}
+            </if>
+            <if test="null != dictBO.code and '' != dictBO.code">
+                and code = #{dictBO.code}
+            </if>
+            <if test="null != dictBO.name and '' != dictBO.name">
+                and name like concat('%',#{dictBO.name},'%')
+            </if>
+            <if test="null != dictBO.parentId and '' != dictBO.parentId">
+                and org_type_code = #{dictBO.parentId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOrgPost" resultType="java.util.Map">
+        select post_id id,post.name label,post.code,sort,post.org_type_code parentId from t_bdmp_assets_dict_post post
+        where post.org_type_code in
+        <foreach collection="orgCodes" item="orgCode" open="(" separator="," close=")">
+            #{orgCode}
+        </foreach>
+        and post.datastatusid = 1
+        order by post.sort
+    </select>
+
+    <select id="getDictByCode" resultType="java.util.Map">
+        <choose>
+            <when test="orgType == '000300'">
+                select dict_id id,code,name label,
+                if((sort is null or sort = ''),0,sort) sort
+                from t_bdmp_assets_dict
+                where inner_parent_id = (select dict_id from t_bdmp_assets_dict where code = '000300')
+                order by sort
+            </when>
+            <otherwise>
+                select dict_id id,code,name label from t_bdmp_assets_dict where code = #{orgType}
+                order by sort
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getOrgDict" resultType="java.util.Map">
+        select dict_id as id,
+               name as label,
+               if((inner_parent_id is null or inner_parent_id = ''),0,inner_parent_id) as parentId,
+               code,
+               if((sort is null or sort = ''),0,sort) sort
+        from t_bdmp_assets_dict
+        where parent_id = (select dict_id from t_bdmp_assets_dict where code = #{parentCode})
+        order by sort,create_time
+    </select>
+
+    <select id="getDictPostList" resultType="java.util.Map">
+        select post_id as id,
+               name as label,
+               code,
+               org_type_code as parentCode,
+               '0' as parentId,
+               if((sort is null or sort = ''),0,sort) sort
+        from t_bdmp_assets_dict_post
+        order by sort,create_time
+    </select>
+    <select id="getCompanyList" resultType="java.util.Map">
+        select org_id as id,org_name as label,0 as parentId,if((sort is null or sort = ''),0,sort) sort,org_type as code
+        from t_bdmp_sys_org
+        where org_type = '000300'
+        order by sort,create_time
+    </select>
+</mapper>

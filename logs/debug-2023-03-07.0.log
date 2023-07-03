@@ -1,0 +1,687 @@
+2023-03-07 08:32:29.843 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:32:29.933 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select IFNULL(fac.facilities_name, station.toll_station_name)                                 stationName,
+               (CASE
+                    WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND
+                          '' != IFNULL( fac.center_off_no, station.toll_station_stake ) AND '0' != IFNULL( fac.center_off_no, station.toll_station_stake ))
+                        THEN concat('K', REPLACE(
+                            UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', ''))
+                    ELSE NULL END)                                                                    pileNumber,
+
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake)
+        AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  beginStakeNo,
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.end_stake_no, station.road_end_stake)
+        AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  endStakeNo,
+               fac.facilities_id_old                                                               as originId,
+               way.ori_waynet_id                                                                   as oriWaysectionNo,
+               way.waysection_id                                                                   as belongSectionId,
+               way.waysection_name                                                                 as belongSectionName,
+               org.org_id                                                                          as belongCompanyId,
+               org.org_name                                                                        as belongCompanyName,
+               org.org_short_name                                                                  as belongCompanySName,
+               station.admin_region_name                                                           as district,
+               station.admin_region_code                                                           as districtCode,
+               station.location_desc                                                               as locationDesc,
+               station.station_province_id                                                         as stationProvinceId,
+               station.station_country_id                                                          as stationCountryId,
+               fac.`status`                                                                        as status,
+               fac.is_monitor                                                                      as isMonitor,
+               fac.map_url                                                                         as mapUrl,
+               fac.is_otn_site                                                                     as isOtnSite,
+               fac.national_site_type                                                              as nationalSiteType,
+               fac.provincial_site_type                                                            as provincialSiteType,
+               fac.site_category                                                                   as siteCategory,
+               fac.computer_room_form                                                              as computerRoomForm,
+               fac.otn_remark                                                                      as otnRemark,
+               fac.baidu_code                                                                      as baiduCode,
+               fac.fac_img                                                                         as facImg,
+               fac.longitude,
+               fac.latitude,
+               IFNULL(sum(station.entrance_driveway_etc_num), 0)                                      etcEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_etc_num), 0)                                          etcExitDriveWay,
+               IFNULL(sum(station.entrance_driveway_num), 0)                                          totalEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_num), 0)                                              totalExitDriveWay,
+               IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)),
+                      0)                                                                              mtcEntranceDriveWay,
+               IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0)       mtcExitDriveWay,
+               (select count(*)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as deviceTotalNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 1 else 0 end)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as normalRunningDeviceNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 0 else 1 end)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as abnormalDeviceNum
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_facilities_toll_station station on fac.facilities_id = station.facilities_id
+                 left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+        where fac.facilities_id = ?
+2023-03-07 08:32:30.500 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT IFNULL(fac.facilities_name, station.toll_station_name) stationName, (CASE WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND '' != IFNULL(fac.center_off_no, station.toll_station_stake) AND '0' != IFNULL(fac.center_off_no, station.toll_station_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', '')) ELSE NULL END) pileNumber, (CASE WHEN (IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake) AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.', '+')), 'K', '')) ELSE NULL END) beginStakeNo, (CASE WHEN (IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL AND '' != IFNULL(fac.end_stake_no, station.road_end_stake) AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.', '+')), 'K', '')) ELSE NULL END) endStakeNo, fac.facilities_id_old AS originId, way.ori_waynet_id AS oriWaysectionNo, way.waysection_id AS belongSectionId, way.waysection_name AS belongSectionName, org.org_id AS belongCompanyId, org.org_name AS belongCompanyName, org.org_short_name AS belongCompanySName, station.admin_region_name AS district, station.admin_region_code AS districtCode, station.location_desc AS locationDesc, station.station_province_id AS stationProvinceId, station.station_country_id AS stationCountryId, fac.`status` AS status, fac.is_monitor AS isMonitor, fac.map_url AS mapUrl, fac.is_otn_site AS isOtnSite, fac.national_site_type AS nationalSiteType, fac.provincial_site_type AS provincialSiteType, fac.site_category AS siteCategory, fac.computer_room_form AS computerRoomForm, fac.otn_remark AS otnRemark, fac.baidu_code AS baiduCode, fac.fac_img AS facImg, fac.longitude, fac.latitude, IFNULL(sum(station.entrance_driveway_etc_num), 0) etcEntranceDriveWay, IFNULL(sum(station.exit_driveway_etc_num), 0) etcExitDriveWay, IFNULL(sum(station.entrance_driveway_num), 0) totalEntranceDriveWay, IFNULL(sum(station.exit_driveway_num), 0) totalExitDriveWay, IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)), 0) mtcEntranceDriveWay, IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0) mtcExitDriveWay, (SELECT count(*) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS deviceTotalNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 1 ELSE 0 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS normalRunningDeviceNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 0 ELSE 1 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS abnormalDeviceNum FROM t_bdmp_assets_facilities fac LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id AND station.tenant_id = 'basedata' LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id AND way.tenant_id = 'basedata' LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE fac.facilities_id = ? AND fac.tenant_id = 'basedata'
+2023-03-07 08:32:30.803 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT IFNULL(fac.facilities_name, station.toll_station_name) stationName, (CASE WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND '' != IFNULL(fac.center_off_no, station.toll_station_stake) AND '0' != IFNULL(fac.center_off_no, station.toll_station_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', '')) ELSE NULL END) pileNumber, (CASE WHEN (IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake) AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.', '+')), 'K', '')) ELSE NULL END) beginStakeNo, (CASE WHEN (IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL AND '' != IFNULL(fac.end_stake_no, station.road_end_stake) AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.', '+')), 'K', '')) ELSE NULL END) endStakeNo, fac.facilities_id_old AS originId, way.ori_waynet_id AS oriWaysectionNo, way.waysection_id AS belongSectionId, way.waysection_name AS belongSectionName, org.org_id AS belongCompanyId, org.org_name AS belongCompanyName, org.org_short_name AS belongCompanySName, station.admin_region_name AS district, station.admin_region_code AS districtCode, station.location_desc AS locationDesc, station.station_province_id AS stationProvinceId, station.station_country_id AS stationCountryId, fac.`status` AS status, fac.is_monitor AS isMonitor, fac.map_url AS mapUrl, fac.is_otn_site AS isOtnSite, fac.national_site_type AS nationalSiteType, fac.provincial_site_type AS provincialSiteType, fac.site_category AS siteCategory, fac.computer_room_form AS computerRoomForm, fac.otn_remark AS otnRemark, fac.baidu_code AS baiduCode, fac.fac_img AS facImg, fac.longitude, fac.latitude, IFNULL(sum(station.entrance_driveway_etc_num), 0) etcEntranceDriveWay, IFNULL(sum(station.exit_driveway_etc_num), 0) etcExitDriveWay, IFNULL(sum(station.entrance_driveway_num), 0) totalEntranceDriveWay, IFNULL(sum(station.exit_driveway_num), 0) totalExitDriveWay, IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)), 0) mtcEntranceDriveWay, IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0) mtcExitDriveWay, (SELECT count(*) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS deviceTotalNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 1 ELSE 0 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS normalRunningDeviceNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 0 ELSE 1 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS abnormalDeviceNum FROM t_bdmp_assets_facilities fac LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id AND station.tenant_id = 'basedata' LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id AND way.tenant_id = 'basedata' LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE fac.facilities_id = ? AND fac.tenant_id = 'basedata'
+2023-03-07 08:32:35.264 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:32:35.264 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_assets_facilities_toll_station_lane
+         WHERE toll_station_id = ?
+2023-03-07 08:32:35.266 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_assets_facilities_toll_station_lane WHERE toll_station_id = ? AND t_bdmp_assets_facilities_toll_station_lane.tenant_id = 'basedata'
+2023-03-07 08:32:35.267 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_assets_facilities_toll_station_lane WHERE toll_station_id = ? AND t_bdmp_assets_facilities_toll_station_lane.tenant_id = 'basedata'
+2023-03-07 08:32:35.397 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:32:35.397 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select nick_name                                                            employeeName,
+               phone,
+               (select name from t_bdmp_assets_dict_post where post_id = user.post) post
+        from t_bdmp_sys_user user
+        where org_id = (
+            select manage_id from t_bdmp_assets_facilities where facilities_id = ?
+            )
+2023-03-07 08:32:35.401 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT nick_name employeeName, phone, (SELECT name FROM t_bdmp_assets_dict_post WHERE post_id = user.post AND t_bdmp_assets_dict_post.tenant_id = 'basedata') post FROM t_bdmp_sys_user user WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND user.tenant_id = 'basedata'
+2023-03-07 08:32:35.407 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT nick_name employeeName, phone, (SELECT name FROM t_bdmp_assets_dict_post WHERE post_id = user.post AND t_bdmp_assets_dict_post.tenant_id = 'basedata') post FROM t_bdmp_sys_user user WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND user.tenant_id = 'basedata'
+2023-03-07 08:32:35.489 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:32:35.489 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select tel_phone from t_bdmp_sys_org where org_id = (
+                select parent_id from t_bdmp_sys_org
+                where org_id = (select manage_id from t_bdmp_assets_facilities where facilities_id = ?)
+            )
+2023-03-07 08:32:35.494 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT tel_phone FROM t_bdmp_sys_org WHERE org_id = (SELECT parent_id FROM t_bdmp_sys_org WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata'
+2023-03-07 08:32:35.499 [http-nio-60005-exec-4] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT tel_phone FROM t_bdmp_sys_org WHERE org_id = (SELECT parent_id FROM t_bdmp_sys_org WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata'
+2023-03-07 08:37:41.997 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:37:42.074 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select IFNULL(fac.facilities_name, station.toll_station_name)                                 stationName,
+               (CASE
+                    WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND
+                          '' != IFNULL( fac.center_off_no, station.toll_station_stake ) AND '0' != IFNULL( fac.center_off_no, station.toll_station_stake ))
+                        THEN concat('K', REPLACE(
+                            UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', ''))
+                    ELSE NULL END)                                                                    pileNumber,
+
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake)
+        AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  beginStakeNo,
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.end_stake_no, station.road_end_stake)
+        AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  endStakeNo,
+               fac.facilities_id_old                                                               as originId,
+               way.ori_waynet_id                                                                   as oriWaysectionNo,
+               way.waysection_id                                                                   as belongSectionId,
+               way.waysection_name                                                                 as belongSectionName,
+               org.org_id                                                                          as belongCompanyId,
+               org.org_name                                                                        as belongCompanyName,
+               org.org_short_name                                                                  as belongCompanySName,
+               station.admin_region_name                                                           as district,
+               station.admin_region_code                                                           as districtCode,
+               station.location_desc                                                               as locationDesc,
+               station.station_province_id                                                         as stationProvinceId,
+               station.station_country_id                                                          as stationCountryId,
+               fac.`status`                                                                        as status,
+               fac.is_monitor                                                                      as isMonitor,
+               fac.map_url                                                                         as mapUrl,
+               fac.is_otn_site                                                                     as isOtnSite,
+               fac.national_site_type                                                              as nationalSiteType,
+               fac.provincial_site_type                                                            as provincialSiteType,
+               fac.site_category                                                                   as siteCategory,
+               fac.computer_room_form                                                              as computerRoomForm,
+               fac.otn_remark                                                                      as otnRemark,
+               fac.baidu_code                                                                      as baiduCode,
+               fac.fac_img                                                                         as facImg,
+               fac.longitude,
+               fac.latitude,
+               IFNULL(sum(station.entrance_driveway_etc_num), 0)                                      etcEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_etc_num), 0)                                          etcExitDriveWay,
+               IFNULL(sum(station.entrance_driveway_num), 0)                                          totalEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_num), 0)                                              totalExitDriveWay,
+               IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)),
+                      0)                                                                              mtcEntranceDriveWay,
+               IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0)       mtcExitDriveWay,
+               (select count(*)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as deviceTotalNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 1 else 0 end)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as normalRunningDeviceNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 0 else 1 end)
+                from t_bdmp_assets_device device
+                where facilities_id = ?
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as abnormalDeviceNum
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_facilities_toll_station station on fac.facilities_id = station.facilities_id
+                 left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+        where fac.facilities_id = ?
+2023-03-07 08:38:01.432 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT IFNULL(fac.facilities_name, station.toll_station_name) stationName, (CASE WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND '' != IFNULL(fac.center_off_no, station.toll_station_stake) AND '0' != IFNULL(fac.center_off_no, station.toll_station_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', '')) ELSE NULL END) pileNumber, (CASE WHEN (IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake) AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.', '+')), 'K', '')) ELSE NULL END) beginStakeNo, (CASE WHEN (IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL AND '' != IFNULL(fac.end_stake_no, station.road_end_stake) AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.', '+')), 'K', '')) ELSE NULL END) endStakeNo, fac.facilities_id_old AS originId, way.ori_waynet_id AS oriWaysectionNo, way.waysection_id AS belongSectionId, way.waysection_name AS belongSectionName, org.org_id AS belongCompanyId, org.org_name AS belongCompanyName, org.org_short_name AS belongCompanySName, station.admin_region_name AS district, station.admin_region_code AS districtCode, station.location_desc AS locationDesc, station.station_province_id AS stationProvinceId, station.station_country_id AS stationCountryId, fac.`status` AS status, fac.is_monitor AS isMonitor, fac.map_url AS mapUrl, fac.is_otn_site AS isOtnSite, fac.national_site_type AS nationalSiteType, fac.provincial_site_type AS provincialSiteType, fac.site_category AS siteCategory, fac.computer_room_form AS computerRoomForm, fac.otn_remark AS otnRemark, fac.baidu_code AS baiduCode, fac.fac_img AS facImg, fac.longitude, fac.latitude, IFNULL(sum(station.entrance_driveway_etc_num), 0) etcEntranceDriveWay, IFNULL(sum(station.exit_driveway_etc_num), 0) etcExitDriveWay, IFNULL(sum(station.entrance_driveway_num), 0) totalEntranceDriveWay, IFNULL(sum(station.exit_driveway_num), 0) totalExitDriveWay, IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)), 0) mtcEntranceDriveWay, IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0) mtcExitDriveWay, (SELECT count(*) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS deviceTotalNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 1 ELSE 0 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS normalRunningDeviceNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 0 ELSE 1 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS abnormalDeviceNum FROM t_bdmp_assets_facilities fac LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id AND station.tenant_id = 'basedata' LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id AND way.tenant_id = 'basedata' LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE fac.facilities_id = ? AND fac.tenant_id = 'basedata'
+2023-03-07 08:38:27.259 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT IFNULL(fac.facilities_name, station.toll_station_name) stationName, (CASE WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND '' != IFNULL(fac.center_off_no, station.toll_station_stake) AND '0' != IFNULL(fac.center_off_no, station.toll_station_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', '')) ELSE NULL END) pileNumber, (CASE WHEN (IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake) AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.', '+')), 'K', '')) ELSE NULL END) beginStakeNo, (CASE WHEN (IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL AND '' != IFNULL(fac.end_stake_no, station.road_end_stake) AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN concat('K', REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.', '+')), 'K', '')) ELSE NULL END) endStakeNo, fac.facilities_id_old AS originId, way.ori_waynet_id AS oriWaysectionNo, way.waysection_id AS belongSectionId, way.waysection_name AS belongSectionName, org.org_id AS belongCompanyId, org.org_name AS belongCompanyName, org.org_short_name AS belongCompanySName, station.admin_region_name AS district, station.admin_region_code AS districtCode, station.location_desc AS locationDesc, station.station_province_id AS stationProvinceId, station.station_country_id AS stationCountryId, fac.`status` AS status, fac.is_monitor AS isMonitor, fac.map_url AS mapUrl, fac.is_otn_site AS isOtnSite, fac.national_site_type AS nationalSiteType, fac.provincial_site_type AS provincialSiteType, fac.site_category AS siteCategory, fac.computer_room_form AS computerRoomForm, fac.otn_remark AS otnRemark, fac.baidu_code AS baiduCode, fac.fac_img AS facImg, fac.longitude, fac.latitude, IFNULL(sum(station.entrance_driveway_etc_num), 0) etcEntranceDriveWay, IFNULL(sum(station.exit_driveway_etc_num), 0) etcExitDriveWay, IFNULL(sum(station.entrance_driveway_num), 0) totalEntranceDriveWay, IFNULL(sum(station.exit_driveway_num), 0) totalExitDriveWay, IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)), 0) mtcEntranceDriveWay, IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0) mtcExitDriveWay, (SELECT count(*) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS deviceTotalNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 1 ELSE 0 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS normalRunningDeviceNum, (SELECT sum(CASE WHEN (work_status IS NULL OR work_status = '' OR work_status = '0') THEN 0 ELSE 1 END) FROM t_bdmp_assets_device device WHERE (facilities_id = ? OR facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81' AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND device.tenant_id = 'basedata') AS abnormalDeviceNum FROM t_bdmp_assets_facilities fac LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id AND station.tenant_id = 'basedata' LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id AND way.tenant_id = 'basedata' LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id AND org.tenant_id = 'basedata' WHERE fac.facilities_id = ? AND fac.tenant_id = 'basedata'
+2023-03-07 08:39:22.967 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:39:22.968 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_assets_facilities_toll_station_lane
+         WHERE toll_station_id = ?
+2023-03-07 08:39:22.973 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_assets_facilities_toll_station_lane WHERE toll_station_id = ? AND t_bdmp_assets_facilities_toll_station_lane.tenant_id = 'basedata'
+2023-03-07 08:39:22.975 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_assets_facilities_toll_station_lane WHERE toll_station_id = ? AND t_bdmp_assets_facilities_toll_station_lane.tenant_id = 'basedata'
+2023-03-07 08:39:22.985 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:39:22.985 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select nick_name                                                            employeeName,
+               phone,
+               (select name from t_bdmp_assets_dict_post where post_id = user.post) post
+        from t_bdmp_sys_user user
+        where org_id = (
+            select manage_id from t_bdmp_assets_facilities where facilities_id = ?
+            )
+2023-03-07 08:39:22.989 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT nick_name employeeName, phone, (SELECT name FROM t_bdmp_assets_dict_post WHERE post_id = user.post AND t_bdmp_assets_dict_post.tenant_id = 'basedata') post FROM t_bdmp_sys_user user WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND user.tenant_id = 'basedata'
+2023-03-07 08:39:22.996 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT nick_name employeeName, phone, (SELECT name FROM t_bdmp_assets_dict_post WHERE post_id = user.post AND t_bdmp_assets_dict_post.tenant_id = 'basedata') post FROM t_bdmp_sys_user user WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND user.tenant_id = 'basedata'
+2023-03-07 08:39:23.068 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:39:23.068 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select tel_phone from t_bdmp_sys_org where org_id = (
+                select parent_id from t_bdmp_sys_org
+                where org_id = (select manage_id from t_bdmp_assets_facilities where facilities_id = ?)
+            )
+2023-03-07 08:39:23.072 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT tel_phone FROM t_bdmp_sys_org WHERE org_id = (SELECT parent_id FROM t_bdmp_sys_org WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata'
+2023-03-07 08:39:23.077 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT tel_phone FROM t_bdmp_sys_org WHERE org_id = (SELECT parent_id FROM t_bdmp_sys_org WHERE org_id = (SELECT manage_id FROM t_bdmp_assets_facilities WHERE facilities_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata') AND t_bdmp_sys_org.tenant_id = 'basedata'
+2023-03-07 08:43:36.250 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:43:36.260 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select
+        count(*) as total,
+
+        sum(case when (device.work_status is not null and device.work_status != '' and device.work_status!='0') then 1
+        else 0 end ) as faultNumber
+        FROM t_bdmp_assets_device device where device.facilities_id in (
+        select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+         
+         
+         
+         
+         
+        ) or facc.parent_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+         
+         
+         
+         
+         
+        )
+        )
+2023-03-07 08:43:36.309 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT count(*) AS total, sum(CASE WHEN (device.work_status IS NOT NULL AND device.work_status != '' AND device.work_status != '0') THEN 1 ELSE 0 END) AS faultNumber FROM t_bdmp_assets_device device WHERE device.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities facc WHERE (facc.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities fac WHERE (fac.parent_id IS NULL OR fac.parent_id = '') AND fac.tenant_id = 'basedata') OR facc.parent_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities fac WHERE (fac.parent_id IS NULL OR fac.parent_id = '') AND fac.tenant_id = 'basedata')) AND facc.tenant_id = 'basedata') AND device.tenant_id = 'basedata'
+2023-03-07 08:43:36.321 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT count(*) AS total, sum(CASE WHEN (device.work_status IS NOT NULL AND device.work_status != '' AND device.work_status != '0') THEN 1 ELSE 0 END) AS faultNumber FROM t_bdmp_assets_device device WHERE device.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities facc WHERE (facc.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities fac WHERE (fac.parent_id IS NULL OR fac.parent_id = '') AND fac.tenant_id = 'basedata') OR facc.parent_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities fac WHERE (fac.parent_id IS NULL OR fac.parent_id = '') AND fac.tenant_id = 'basedata')) AND facc.tenant_id = 'basedata') AND device.tenant_id = 'basedata'
+2023-03-07 08:45:17.943 [http-nio-60005-exec-10] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:45:17.987 [http-nio-60005-exec-10] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select system_id                              systemId,
+               (select dict.system_name
+                from t_bdmp_assets_dict_system dict
+                where dict.system_id = dev.system_id) systemName,
+               device_id                              id,
+               device_name                            name,
+               dev.device_id_old                      originId,
+               dev.ip,
+               dev.longitude,
+               dev.latitude,
+               (case
+                    when (dev.work_status is null or dev.work_status = '' or dev.work_status = '0') then 0
+                    else 1 end)                       status
+        from t_bdmp_assets_device dev
+        where dev.facilities_id = ?
+           or dev.facilities_id in (select facilities_id from t_bdmp_assets_facilities where parent_id = ?)
+2023-03-07 08:45:17.999 [http-nio-60005-exec-10] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT system_id systemId, (SELECT dict.system_name FROM t_bdmp_assets_dict_system dict WHERE dict.system_id = dev.system_id AND dict.tenant_id = 'basedata') systemName, device_id id, device_name name, dev.device_id_old originId, dev.ip, dev.longitude, dev.latitude, (CASE WHEN (dev.work_status IS NULL OR dev.work_status = '' OR dev.work_status = '0') THEN 0 ELSE 1 END) status FROM t_bdmp_assets_device dev WHERE (dev.facilities_id = ? OR dev.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND dev.tenant_id = 'basedata'
+2023-03-07 08:45:18.011 [http-nio-60005-exec-10] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT system_id systemId, (SELECT dict.system_name FROM t_bdmp_assets_dict_system dict WHERE dict.system_id = dev.system_id AND dict.tenant_id = 'basedata') systemName, device_id id, device_name name, dev.device_id_old originId, dev.ip, dev.longitude, dev.latitude, (CASE WHEN (dev.work_status IS NULL OR dev.work_status = '' OR dev.work_status = '0') THEN 0 ELSE 1 END) status FROM t_bdmp_assets_device dev WHERE (dev.facilities_id = ? OR dev.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND dev.tenant_id = 'basedata'
+2023-03-07 08:45:47.116 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 08:45:47.117 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select system_id                              systemId,
+               (select dict.system_name
+                from t_bdmp_assets_dict_system dict
+                where dict.system_id = dev.system_id) systemName,
+               device_id                              id,
+               device_name                            name,
+               dev.device_id_old                      originId,
+               dev.ip,
+               dev.longitude,
+               dev.latitude,
+               (case
+                    when (dev.work_status is null or dev.work_status = '' or dev.work_status = '0') then 0
+                    else 1 end)                       status
+        from t_bdmp_assets_device dev
+        where dev.facilities_id = ?
+           or dev.facilities_id in (select facilities_id from t_bdmp_assets_facilities where parent_id = ?)
+2023-03-07 08:45:47.136 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT system_id systemId, (SELECT dict.system_name FROM t_bdmp_assets_dict_system dict WHERE dict.system_id = dev.system_id AND dict.tenant_id = 'basedata') systemName, device_id id, device_name name, dev.device_id_old originId, dev.ip, dev.longitude, dev.latitude, (CASE WHEN (dev.work_status IS NULL OR dev.work_status = '' OR dev.work_status = '0') THEN 0 ELSE 1 END) status FROM t_bdmp_assets_device dev WHERE (dev.facilities_id = ? OR dev.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND dev.tenant_id = 'basedata'
+2023-03-07 08:45:47.154 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT system_id systemId, (SELECT dict.system_name FROM t_bdmp_assets_dict_system dict WHERE dict.system_id = dev.system_id AND dict.tenant_id = 'basedata') systemName, device_id id, device_name name, dev.device_id_old originId, dev.ip, dev.longitude, dev.latitude, (CASE WHEN (dev.work_status IS NULL OR dev.work_status = '' OR dev.work_status = '0') THEN 0 ELSE 1 END) status FROM t_bdmp_assets_device dev WHERE (dev.facilities_id = ? OR dev.facilities_id IN (SELECT facilities_id FROM t_bdmp_assets_facilities WHERE parent_id = ? AND t_bdmp_assets_facilities.tenant_id = 'basedata')) AND dev.tenant_id = 'basedata'
+2023-03-07 09:45:19.378 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:45:19.955 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select * from t_bdmp_sys_user where user_id = ?
+2023-03-07 09:45:20.010 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT * FROM t_bdmp_sys_user WHERE user_id = ? AND t_bdmp_sys_user.tenant_id = 'basedata'
+2023-03-07 09:45:20.012 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT * FROM t_bdmp_sys_user WHERE user_id = ? AND t_bdmp_sys_user.tenant_id = 'basedata'
+2023-03-07 09:50:27.865 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:50:28.261 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 09:50:28.674 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 09:50:29.021 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 09:52:36.867 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:52:36.879 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:52:36.890 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:52:36.896 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:16.787 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:53:16.789 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:17.124 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:17.444 [http-nio-60005-exec-5] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:57.559 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:53:57.560 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:57.900 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:53:58.225 [http-nio-60005-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:57:58.205 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 09:57:58.225 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:57:58.232 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 09:57:58.237 [http-nio-60005-exec-7] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = ?
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = ? AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+2023-03-07 17:15:26.259 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 17:15:26.499 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 17:15:26.540 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 17:15:26.546 [http-nio-60005-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:29:05.045 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 18:29:05.308 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:29:05.351 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:29:05.357 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:38:14.110 [http-nio-60005-exec-9] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 18:38:14.121 [http-nio-60005-exec-9] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:38:14.127 [http-nio-60005-exec-9] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:38:14.132 [http-nio-60005-exec-9] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 18:48:24.342 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 18:55:02.667 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 19:01:12.841 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 19:02:18.813 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 19:04:40.545 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 19:07:09.463 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-07 19:07:09.802 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 19:07:10.244 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-07 19:07:10.569 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?

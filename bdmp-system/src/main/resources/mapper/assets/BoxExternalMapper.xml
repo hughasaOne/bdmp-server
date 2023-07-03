@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.BoxExternalDao">
+
+    <!--获取可用的外设-->
+    <select id="getEnablePeripherals" resultType="map">
+        SELECT tbad.device_id       deviceId,
+               tbad.facilities_id   facId,
+               tbad.device_name     deviceName,
+               tbad.device_code     deviceCode,
+               tbad2.name           deviceTypeName,
+               tbad2.code           deviceType,
+               tbaf.facilities_name facilitiesId,
+               tbad.location,
+               sys.system_id           systemId,
+               sys.system_name           systemName
+        FROM t_bdmp_assets_device tbad
+                 INNER JOIN t_bdmp_assets_dict tbad2
+                            ON tbad.device_type = tbad2.code
+                 INNER JOIN t_bdmp_assets_facilities tbaf
+                            ON tbaf.facilities_id = tbad.facilities_id
+                 LEFT JOIN t_bdmp_assets_dict tbad3
+                           ON tbad.system_id = tbad3.code
+                 LEFT JOIN t_bdmp_assets_dict_system sys
+                           ON sys.system_id = tbad.system_id
+        WHERE NOT EXISTS
+            (
+                SELECT tbbe.external_id,
+                       tbbe.sn,
+                       tbbe.port_num,
+                       tbbe.external_sn,
+                       tbbe.sort,
+                       tbbe.datastatusid,
+                       tbbe.create_time,
+                       tbbe.create_by,
+                       tbbe.update_time,
+                       tbbe.update_by
+                FROM t_bdmp_assets_device_box_external tbbe
+                WHERE tbad.device_code = tbbe.external_sn
+            )
+          AND tbad.device_type != "130700"
+        AND tbad.facilities_id = #{facId}
+    </select>
+
+    <!--获取外设信息-->
+    <select id="getExternalInfo" resultType="java.util.Map">
+        SELECT tbbe.*,
+        tbad.device_name,
+        tbad.ip            deviceIp,
+        tbad1.ip           boxIp,
+        tbad.device_id     deviceId,
+        tbad.device_code,
+        tbad.assets_no,
+        tbad3.code         device_type,
+        tbad3.name         deviceTypeName,
+        tbaf.facilities_name,
+        tbaf.facilities_id deviceFacId,
+        system.system_name systemName,
+        system.system_id      deviceSysId,
+        tbad.location
+        FROM t_bdmp_assets_device tbad1
+        INNER JOIN t_bdmp_assets_device_box_external tbbe
+        ON tbad1.device_code = tbbe.sn
+        INNER JOIN t_bdmp_assets_device tbad
+        ON tbbe.external_sn = tbad.device_code
+        INNER JOIN t_bdmp_assets_facilities tbaf
+        ON tbad.facilities_id = tbaf.facilities_id
+        LEFT JOIN t_bdmp_assets_dict_system system
+        ON system.system_id = tbad.system_id
+        INNER JOIN t_bdmp_assets_dict tbad3
+        ON tbad.device_type = tbad3.code
+        WHERE
+        <if test="null != deviceId and '' != deviceId">
+            tbad1.device_id = #{deviceId}
+        </if>
+        <if test="null != sn and '' != sn">
+            tbad1.device_code = #{sn}
+        </if>
+    </select>
+
+    <!--获取具体端口的信息-->
+    <select id="getPortInfoByPortAndId" resultType="map">
+        SELECT
+            tbbe.*,#{boxId} boxId,tbaf.facilities_id facId,tbad.device_id deviceId,tbad.device_name,tbad.device_code,tbad.assets_no,tbad3.name deviceTypeName,tbaf.facilities_name,tbad2.name,tbad.location
+        FROM t_bdmp_assets_device tbad1
+                 INNER JOIN t_bdmp_assets_device_box_external tbbe
+                            ON tbad1.device_code = tbbe.sn
+                 INNER JOIN t_bdmp_assets_device tbad
+                            ON tbbe.external_sn = tbad.device_code
+                 INNER JOIN t_bdmp_assets_facilities tbaf
+                            ON tbad.facilities_id = tbaf.facilities_id
+                 LEFT JOIN t_bdmp_assets_dict tbad2
+                            ON tbad2.code = tbad.system_id
+                 INNER JOIN t_bdmp_assets_dict tbad3
+                            ON tbad.device_type = tbad3.code
+        WHERE tbad1.device_id = #{boxId}
+          AND tbbe.port_num = #{portNum}
+    </select>
+</mapper>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.pts.dao.PtsSysDao">
+
+    <!-- 分页查询组织机构 -->
+    <select id="queryPageOrg" resultType="java.util.HashMap">
+        select org_name       as orgName,
+               org_id         as orgId,
+               org_code       as orgCode,
+               org_short_name as orgShortName,
+               parent_id      as parentId,
+               org_type       as orgType
+        from t_bdmp_sys_org
+        where 1 = 1
+        <if test="null != orgTypes and orgTypes.size > 0">
+            and org_type in
+            <foreach collection="orgTypes" item="orgType" separator="," open="(" close=")">
+                #{orgType}
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 分页查询角色 -->
+    <select id="queryPageRole" resultType="java.util.HashMap">
+        select role_id     as roleId,
+               role_name   as roleName,
+               description as description
+        from t_bdmp_sys_role
+        where app_id = #{appId}
+    </select>
+
+    <!-- 根据角色id查询资源列表 -->
+    <select id="queryResourceByRoleId" resultType="java.util.HashMap">
+        select resource.resource_id           as resourceId,
+               resource.resource_title        as resourceTitle,
+               resource.resource_type         as resourceType,
+               IFNULL(resource.parent_id, "") as parentId,
+               resource.path                  as path,
+               resource.permission            as permission
+        from t_bdmp_sys_role_resource roleResource
+                 left join t_bdmp_sys_resource resource
+                           on roleResource.resource_id = resource.resource_id
+        where roleResource.role_id = #{roleId}
+          and resource.app_id = #{appId}
+    </select>
+
+    <!-- 根据appId查询角色 -->
+    <select id="queryRoleByAppId" resultType="java.lang.String">
+        select role_id
+        from t_bdmp_sys_role
+        where app_id = #{appId}
+    </select>
+
+    <!-- 根据角色，分页查询用户 -->
+    <select id="queryPageUserByRole" resultType="java.util.HashMap">
+        select
+            org.org_id          as orgId,
+            org.org_name        as orgName,
+            org.org_code        as orgCode,
+            org.org_short_name  as orgShortName,
+            user.user_id        as userId,
+            user.username       as username,
+            user.nick_name      as nickName,
+            user.phone          as phone
+        from
+        ( select * from t_bdmp_sys_user where user_id in(
+        select user_id from t_bdmp_sys_user_role where role_id in
+        <foreach item="roleId" index="index" collection="roleIds" separator="," open="(" close=")">
+            <trim>
+                #{roleId}
+            </trim>
+        </foreach>
+        ) and app_id='1')  user
+        left join t_bdmp_sys_org org on user.org_id = org.org_id
+    </select>
+
+    <!-- 查询用户的角色 -->
+    <select id="queryRoleByUserId" resultType="java.util.HashMap">
+        select role.role_id     as roleId,
+               role.role_name   as roleName,
+               role.description as description
+        from t_bdmp_sys_role role
+        where role.app_id =#{appId} and role.role_id in(
+		    select role_id from t_bdmp_sys_user_role where user_id=#{userId}
+	    )
+    </select>
+
+    <!--查询用户拥有的组织机构权限-->
+    <select id="getUserOrgPermission" resultType="com.rhy.bdmp.open.modules.pts.domain.vo.UserPermissionVo">
+        select permission.user_id,
+               permission.permissions_id orgId,
+               org.org_type,
+               dict.name orgTypeName,
+               org.org_short_name orgName,
+               user.nick_name userName,
+               app.app_name
+        from t_bdmp_sys_user_data permission
+                 left join t_bdmp_sys_org org
+                           on permission.permissions_id = org.org_id
+                 left join t_bdmp_sys_user user
+        on permission.user_id = user.user_id
+            left join t_bdmp_sys_app app
+            on app.app_id = permission.app_id
+            left join t_bdmp_assets_dict dict
+            on dict.code = org.org_type
+        where permission.user_id = #{userId}
+          and permission.data_type = 3
+          and permission.app_id = #{appId}
+    </select>
+
+</mapper>

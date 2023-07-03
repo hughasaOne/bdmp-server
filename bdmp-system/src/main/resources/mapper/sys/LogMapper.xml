@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.LogDao">
+
+    <select id="page" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.LogVo">
+        select log.*,user.nick_name,org.org_name,org.org_id
+        from t_rhy_log log
+        left join t_bdmp_sys_user user on log.username = user.user_id
+        left join t_bdmp_sys_org org on user.org_id = org.org_id
+        <where>
+            <if test="null != logBo.nickName and '' != logBo.nickName">
+                and user.nick_name like concat('%',#{logBo.nickName},'%')
+            </if>
+            <if test="null != logBo.orgName and '' != logBo.orgName">
+                and org.org_name like concat('%',#{logBo.orgName},'%')
+            </if>
+            <if test="null != logBo.desc and '' != logBo.desc">
+                and log.description like concat('%',#{logBo.desc},'%')
+            </if>
+        </where>
+        order by log.create_time desc,log.log_id
+    </select>
+</mapper>

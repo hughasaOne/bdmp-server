@@ -1,0 +1,3140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.FacilitiesDao">
+
+    <!-- 收费站统计详情 -->
+    <select id="getTollStationStatInfo" resultType="java.util.HashMap">
+        select
+        count(*) as total,
+        sum( case when (fac.status = '1' and fac.status is not null) then 1 else 0 end ) as normalNumber,
+        sum( case when (fac.status != '1' or fac.status is null) then 1 else 0 end ) as closeNumber,
+        sum( s.entrance_driveway_etc_num ) + sum( s.exit_driveway_etc_num ) as etcNumber,
+        sum( s.entrance_driveway_num ) + sum( s.exit_driveway_num ) as totalDrivewayNumber,
+        sum( s.entrance_driveway_num ) + sum( s.exit_driveway_num ) - sum( s.entrance_driveway_etc_num ) - sum(
+        s.exit_driveway_etc_num ) as mtcNumber
+        from (
+        select fac.facilities_id, fac.status
+        from t_bdmp_assets_facilities fac
+        where fac.facilities_type = #{facType}
+        and (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and exists(
+                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                fac.facilities_id=o.permissions_id
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        ) fac
+        left join t_bdmp_assets_facilities_toll_station s on fac.facilities_id = s.facilities_id
+    </select>
+
+    <!-- 查询收费站详情 -->
+    <select id="getTollStationDetail" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.TollStationDetailBO">
+        select IFNULL(fac.facilities_name, station.toll_station_name)                                 stationName,
+               (CASE
+                    WHEN (IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL AND
+                          '' != IFNULL( fac.center_off_no, station.toll_station_stake ) AND '0' != IFNULL( fac.center_off_no, station.toll_station_stake ))
+                        THEN concat('K', REPLACE(
+                            UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.', '+')), 'K', ''))
+                    ELSE NULL END)                                                                    pileNumber,
+
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake)
+        AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  beginStakeNo,
+               (
+                   CASE
+                       WHEN (
+                               IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL
+                               AND '' != IFNULL(fac.end_stake_no, station.road_end_stake)
+        AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                                                  endStakeNo,
+               fac.facilities_id_old                                                               as originId,
+               way.ori_waynet_id                                                                   as oriWaysectionNo,
+               way.waysection_id                                                                   as belongSectionId,
+               way.waysection_name                                                                 as belongSectionName,
+               org.org_id                                                                          as belongCompanyId,
+               org.org_name                                                                        as belongCompanyName,
+               org.org_short_name                                                                  as belongCompanySName,
+               station.admin_region_name                                                           as district,
+               station.admin_region_code                                                           as districtCode,
+               station.location_desc                                                               as locationDesc,
+               station.station_province_id                                                         as stationProvinceId,
+               station.station_country_id                                                          as stationCountryId,
+               fac.`status`                                                                        as status,
+               fac.is_monitor                                                                      as isMonitor,
+               fac.map_url                                                                         as mapUrl,
+               fac.is_otn_site                                                                     as isOtnSite,
+               fac.national_site_type                                                              as nationalSiteType,
+               fac.provincial_site_type                                                            as provincialSiteType,
+               fac.site_category                                                                   as siteCategory,
+               fac.computer_room_form                                                              as computerRoomForm,
+               fac.otn_remark                                                                      as otnRemark,
+               fac.baidu_code                                                                      as baiduCode,
+               fac.fac_img                                                                         as facImg,
+               fac.longitude,
+               fac.latitude,
+               IFNULL(sum(station.entrance_driveway_etc_num), 0)                                      etcEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_etc_num), 0)                                          etcExitDriveWay,
+               IFNULL(sum(station.entrance_driveway_num), 0)                                          totalEntranceDriveWay,
+               IFNULL(sum(station.exit_driveway_num), 0)                                              totalExitDriveWay,
+               IFNULL((sum(station.entrance_driveway_num) - sum(station.entrance_driveway_etc_num)),
+                      0)                                                                              mtcEntranceDriveWay,
+               IFNULL((sum(station.exit_driveway_num) - sum(station.exit_driveway_etc_num)), 0)       mtcExitDriveWay,
+               (select count(*)
+                from t_bdmp_assets_device device
+                where facilities_id = #{stationId}
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as deviceTotalNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 1 else 0 end)
+                from t_bdmp_assets_device device
+                where facilities_id = #{stationId}
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as normalRunningDeviceNum,
+               (select sum(case when (work_status is null or work_status = '' or work_status = '0') then 0 else 1 end)
+                from t_bdmp_assets_device device
+                where facilities_id = #{stationId}
+                   or facilities_id in (select facilities_id
+                                        from t_bdmp_assets_facilities
+                                        where parent_id = 'B9DAB39D-81B5-4261-B003-E7D3BABF0D81')) as abnormalDeviceNum
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_facilities_toll_station station on fac.facilities_id = station.facilities_id
+                 left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+        where fac.facilities_id = #{stationId}
+    </select>
+
+    <!-- 桥梁分类统计信息 -->
+    <select id="getBridgeClassifyStat" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.BridgeStatBo">
+        select
+        sum(IFNULL(ROUND(bridge.bridge_meter/1000,4), 0)) AS totalLength,
+        IFNULL(bridge.across_radius_type_name,'其他') AS NAME,
+        IFNULL(count(*),0) as num
+        from
+        (
+        select
+        bridge.facilities_id,
+        bridge.across_radius_type_code,
+        bridge.across_radius_type_name,
+        bridge.bridge_meter
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) bridge
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.operating_waysection_id = #{orgId}
+            </if>
+        </where>
+        ) as bridge
+        group by bridge.across_radius_type_code
+    </select>
+
+    <!-- 按设施类型分类统计信息 -->
+    <select id="getFacStatByType" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacStatByTypeBO">
+        select
+        count(*) as total,
+        fac.waysection_id as waysectionId,
+        way.waynet_id as waysectionNo,
+        way.waysection_name as waysectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        fac.facilities_type as code,
+        dict.name as name
+        from (
+        select waysection_id, (case when(0 &lt; locate('323307', facilities_type)) then '32330700' else facilities_type
+        end) as facilities_type,facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) fac
+        left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+        left join t_bdmp_assets_dict dict on fac.facilities_type = dict.code
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_type,way.waysection_id
+    </select>
+
+    <!-- 查询桥梁统计信息 -->
+    <select id="getFacBridgeStatByType" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacStatByTypeBO">
+        select
+        count(*) as total,
+        fac.operating_waysection_id as waysectionId,
+        fac.facilities_id as facilitiesId,
+        way.waynet_id as waysectionNo,
+        way.waysection_name as waysectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        '32330600' as code,
+        '桥梁' as name
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) fac
+        left join t_bdmp_assets_waysection way on fac.operating_waysection_id = way.waysection_id
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.operating_waysection_id = #{orgId}
+            </if>
+        </where>
+        group by fac.operating_waysection_id
+    </select>
+
+    <!-- 根据设施类型 获取设施列表 -->
+    <select id="getFacInfoListByType" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Facilities">
+        select * from t_bdmp_assets_facilities fac
+        where (fac.parent_id is null or fac.parent_id = '')
+        and fac.facilities_type in
+        <foreach item="facType" index="index" collection="facTypes" separator="," open="(" close=")">
+            <trim>
+                #{facType}
+            </trim>
+        </foreach>
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id_old = #{orgId}
+        </if>
+    </select>
+
+    <!-- 获取设施桥梁列表 -->
+    <!--<select id="getFacInfoBridgeListByType" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Facilities">-->
+    <!--select-->
+    <!--bri.bridge_id facilitiesId,-->
+    <!--bri.bridge_no facilitiesCode,-->
+    <!--bri.bridge_name facilitiesName,-->
+    <!--bri.longitude,-->
+    <!--bri.latitude,-->
+    <!--fac.status,-->
+    <!--fac.is_monitor as isMonitor,-->
+    <!--fac.map_url as mapUrl,-->
+    <!--'32330600' facilitiesType,-->
+    <!--bri.id_code facilitiesIdOld-->
+    <!--from t_bdmp_assets_facilities_bridge bri-->
+    <!--left join (select * from t_bdmp_assets_facilities where facilities_type='32330600') fac on bri.facilities_id=fac.facilities_id-->
+    <!--where bri.bridge_name not like '%右幅%'-->
+    <!--<if test="isUseUserPermissions">-->
+    <!--<if test="1 == dataPermissionsLevel">-->
+    <!--and bri.operating_waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="2 == dataPermissionsLevel">-->
+    <!--and bri.operating_waysection_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="3 == dataPermissionsLevel">-->
+    <!--and bri.facilities_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--</if>-->
+    <!--<if test=" 'group' == nodeType">-->
+    <!--and bri.operating_waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'org' == nodeType">-->
+    <!--and bri.operating_waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'way' == nodeType">-->
+    <!--and bri.operating_waysection_id = #{orgId}-->
+    <!--</if>-->
+    <!--</select>-->
+
+    <!-- 获取门架明细 -->
+    <select id="getGantryDetail" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.GantryDetailBO">
+        SELECT fac.latitude          as latitude,
+               fac.longitude         as longitude,
+               fac.facilities_id_old as originId,
+               fac.facilities_name   as gantryName,
+               (
+                   CASE
+
+                       WHEN (
+                               IFNULL(fac.center_off_no, gantry.real_gantry_id) IS NOT NULL
+                               AND '' != IFNULL(fac.center_off_no, gantry.real_gantry_id)
+            AND '0' != IFNULL(fac.center_off_no, gantry.real_gantry_id)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, gantry.real_gantry_id), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                 as pileNumber,
+               fac.is_monitor        as isMonitor,
+               fac.map_url           as mapUrl,
+               fac.status            as status,
+               way.waysection_id     as waySectionId,
+               way.ori_waynet_id     as oriWaySectionNo,
+               way.waysection_name   as waySectionName,
+               gantry.gantry_id      as gantryId,
+               gantry.gantry_type    as gantryType,
+               gantry.gantry_order   as gantryOrder,
+               gantry.hex            as hex,
+               gantry.section as section,
+            gantry.station          as station,
+            gantry.derection        as derection,
+            gantry.real_gantry_id   as realGantryId,
+            org.org_short_name      as company,
+            org.org_id              as companyId,
+            gantry.nei_provinces    as neiProvinces,
+            gantry.loc_direction    as locDirection,
+            gantry.is_province      as isProvince,
+            upper(if(locate('K',fac.begin_stake_no),
+            fac.begin_stake_no,
+            concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+            (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+            upper(if(locate('K',fac.end_stake_no),
+            fac.end_stake_no,
+            concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+            (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        FROM
+            t_bdmp_assets_facilities_gantry gantry
+            LEFT JOIN t_bdmp_assets_facilities fac
+        ON gantry.facilities_id = fac.facilities_id
+            LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id
+            LEFT JOIN t_bdmp_sys_org org ON org.org_id = way.manage_id
+        WHERE
+            gantry.gantry_id = #{deviceNumber}
+    </select>
+
+    <!-- 查询设施 -->
+    <select id="selectByIdAndType" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Facilities">
+        select *
+        from t_bdmp_assets_facilities
+        where facilities_id = #{facilitiesId}
+          and facilities_type = #{facilitiesType}
+    </select>
+
+    <!-- 获取隧道总况信息 按隧道类型分类统计 -->
+    <select id="getTunnelStatByType" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.TunnelStatInfo">
+        select
+        count(*) as total,
+        fac.tunnel_long_type_code as code,
+        fac.tunnel_long_type_name as name,
+        ROUND(fac.tunnel_meter,4) as length
+        from (
+
+        select
+        fac.facilities_id,
+        tunnel.tunnel_long_type_code,
+        tunnel.tunnel_long_type_name,
+        max(cast(tunnel.tunnel_meter as DECIMAL(10,2))) as tunnel_meter
+        from t_bdmp_assets_facilities fac
+        left join t_bdmp_assets_facilities_tunnel tunnel on fac.facilities_id = tunnel.facilities_id
+        <where>
+            and fac.facilities_type = '32330400'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and tunnel.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and tunnel.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and tunnel.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and tunnel.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and tunnel.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and tunnel.operating_waysection_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) as fac
+        group by fac.tunnel_long_type_code
+    </select>
+
+
+    <select id="selectBridgeById" resultType="com.rhy.bdmp.open.modules.assets.domain.po.FacilitiesBridge">
+        select bridge.bridge_center_stake,
+               bridge.technology_evaluate_name,
+               bridge.bridge_start_stake,
+               bridge.bridge_end_stake,
+               bridge.across_radius_type_name,
+               bridge.admin_region_code,
+               bridge.admin_region_name,
+               (case
+                    when (bridge.operating_waysection_id is null or bridge.operating_waysection_id = '')
+                        then bridge.manage_name
+                    else (select org_short_name
+                          from t_bdmp_sys_org
+                          where org_id = (select manage_id
+                                          from t_bdmp_assets_waysection
+                                          where waysection_id = bridge.operating_waysection_id)) end) as manage_name,
+               way.waysection_name as route_s_name,
+               bridge.bridge_name,
+               bridge.bridge_meter,
+               bridge.facilities_id,
+               bridge.longitude,
+               bridge.latitude,
+               bridge.bridge_surface_wide_meter,
+               bridge.bridge_all_wide_meter,
+               (select is_monitor
+                from t_bdmp_assets_facilities fac
+                where facilities_id = bridge.facilities_id)                                           AS isMonitor,
+               (select map_url
+                from t_bdmp_assets_facilities fac
+                where facilities_id = bridge.facilities_id)                                           AS mapUrl,
+               (select ori_waynet_id
+                from t_bdmp_assets_waysection
+                where waysection_id = bridge.operating_waysection_id)                                 as oriWaysectionNo
+        from t_bdmp_assets_facilities_bridge bridge
+        left join t_bdmp_assets_waysection way on way.waysection_id = bridge.operating_waysection_id
+        where bridge.bridge_id = #{facId}
+    </select>
+
+    <!-- 获取服务区信息 -->
+    <select id="selectServiceAreaByGeoId" resultType="java.util.HashMap">
+        SELECT server_name               AS serverName,
+               highspeed_name            AS highSpeedName,
+               animal_park_count         AS animalParkCount,
+               big_customer_park_count   AS bigCustomerParkCount,
+               female_park_count         AS femaleParkCount,
+               easy_park_count           AS easyParkCount,
+               area_covered              AS areaCovered,
+               dangerous_park_count      AS dangerousParkCount,
+               big_good_park_count       AS bigGoodParkCount,
+               normal_good_park_count    AS normalGoodParkCount,
+               small_customer_park_count AS smallCustomerParkCount,
+               building_covered          AS buildCovered,
+               direction_name            AS direction,
+               road_no                   AS pileNumber,
+               longitude,
+               latitude,
+               ssb.has_restaurant        AS hasRestaurant,
+               ssb.has_bussiness         AS hasBussiness,
+               ssb.has_guest_room        AS hasGuestRoom,
+               ssb.has_shower            AS hasShower,
+               CASE
+                   WHEN IFNULL(ssb.third_toilet_count, 0) + IFNULL(ssb.third_toilet_poo_count, 0) +
+                        IFNULL(ssb.easy_toilet_count, 0) + IFNULL(ssb.easy_toilet_poo_count, 0) +
+                        IFNULL(ssb.has_mom_baby_room_toilet, 0) > 0 THEN
+                       '有'
+                   ELSE '无'
+                   END                   AS hasToilet,
+               ssb.has_mom_baby_room     AS hasMomBabyRoom,
+               CASE
+                   WHEN CAST(
+                                ssb.charge_count AS DECIMAL(12, 2)) > 0 THEN
+                       '有'
+                   ELSE '无'
+                   END                   AS hasChargeStation,
+               CASE
+                   WHEN CAST(oil_covered AS DECIMAL(12, 2)) > 0 THEN
+                       '有'
+                   ELSE '无'
+                   END                   AS hasOilStation,
+               CASE
+                   WHEN CAST(
+                                ssb.park_covered AS DECIMAL(12, 2)) > 0 THEN
+                       '有'
+                   ELSE '无'
+                   END                   AS hasPark,
+               ssb.has_car_repair        AS hasCarRepair,
+               ssb.has_emergency_help    AS hasEmergencyHelp
+        FROM t_bdmp_assets_facilities_service_area ssb
+        WHERE ssb.facilities_id = #{geoId}
+    </select>
+
+
+    <!-- 获取设施信息 -->
+    <select id="getFacByIdAndType" resultType="java.util.HashMap">
+        select
+        fac.facilities_name infoName,
+        fac.facilities_id_old as originId,
+        way.ori_waynet_id oriWaysectionNo,
+        way.waysection_id waySectionId,
+        way.waysection_name waySection,
+        org.org_id companyId,
+        org.org_name companyName,
+        org.org_short_name companySName,
+        <choose>
+            <when test="facType == '32330800'">
+                (
+                CASE
+
+                WHEN (
+                IFNULL(fac.center_off_no, servicaArea.road_no) IS NOT NULL
+                AND '' != IFNULL(fac.center_off_no, servicaArea.road_no)
+                AND '0' != IFNULL(fac.center_off_no, servicaArea.road_no)) THEN
+                concat(
+                'K',
+                REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, servicaArea.road_no), '.',
+                '+')), 'K', ''))
+                ELSE NULL
+                END
+                ) pileNumber,
+                null beginStakeNo,
+                null endStakeNo,
+            </when>
+            <when test="facType == '32330400'">
+                (CASE
+                WHEN (IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) IS NOT NULL AND
+                '' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) AND
+                '0' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake)) THEN concat('K', REPLACE(
+                UPPER(REPLACE(IFNULL(fac.center_off_no, tunnel.tunnel_center_stake), '.', '+')), 'K', ''))
+                ELSE NULL END) pileNumber,
+
+                (CASE
+                WHEN (IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) IS NOT NULL AND
+                '' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) AND
+                '0' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake)) THEN concat('K', REPLACE(
+                UPPER(REPLACE(IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake), '.', '+')), 'K', ''))
+                ELSE NULL END) beginStakeNo,
+
+                null endStakeNo,
+            </when>
+            <otherwise>
+                upper(if(locate('K',fac.center_off_no),
+                fac.center_off_no,
+                concat('K', (substring_index(fac.center_off_no, '.', 1)), '+',
+                (substring_index(fac.center_off_no, '.', -1))))) pileNumber,
+
+                upper(if(locate('K',fac.begin_stake_no),
+                fac.begin_stake_no,
+                concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+                (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+
+                upper(if(locate('K',fac.end_stake_no),
+                fac.end_stake_no,
+                concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+                (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo,
+            </otherwise>
+        </choose>
+        fac.longitude longitude,
+        fac.latitude latitude,
+        fac.status status,
+        fac.facilities_id_old originId,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl
+        from t_bdmp_assets_facilities fac
+        left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+        left join t_bdmp_sys_org org on way.manage_id = org.org_id
+        <if test="facType == '32330800'">
+            LEFT JOIN t_bdmp_assets_facilities_service_area servicaArea ON fac.facilities_id = servicaArea.facilities_id
+        </if>
+        <if test="facType == '32330400'">
+            left JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+        </if>
+        where fac.facilities_id = #{geoId}
+        and fac.facilities_type = #{facType}
+        group by fac.facilities_id
+    </select>
+
+    <!-- 获取隧道信息 -->
+    <select id="selectTunnelByGeoId" resultType="com.rhy.bdmp.open.modules.assets.domain.po.FacilitiesTunnel">
+        select *
+        from t_bdmp_assets_facilities_tunnel
+        where facilities_id = #{geoId}
+    </select>
+
+    <select id="getGantry" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.GantryBO">
+        SELECT fac.facilities_id     as                                          facilitiesId,
+               fac.facilities_id     as                                          id,
+               fac.facilities_name   as                                          name,
+               fac.status            as                                          status,
+               fac.facilities_id_old as                                          originId,
+               fac.latitude          as                                          latitude,
+               fac.longitude         as                                          longitude,
+               fac.is_monitor        as                                          isMonitor,
+               fac.map_url           as                                          mapUrl,
+               fac.waysection_id     as                                          waysectionId,
+               way.waysection_name   as                                          waysectionName,
+               org.org_id            as                                          orgId,
+               org.org_short_name    as                                          orgName,
+               (
+                   CASE
+
+                       WHEN (
+                               IFNULL(fac.center_off_no, gantry.real_gantry_id) IS NOT NULL
+                               AND '' != IFNULL(fac.center_off_no, gantry.real_gantry_id)
+        AND '0' != IFNULL(fac.center_off_no, gantry.real_gantry_id)) THEN
+                           concat(
+                                   'K',
+                                   REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, gantry.real_gantry_id), '.',
+                                                         '+')), 'K', ''))
+                       ELSE NULL
+                       END
+                   )                                                             centerOffNo,
+               upper(if(locate('K', fac.begin_stake_no),
+                        fac.begin_stake_no,
+                        concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+                               (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+               upper(if(locate('K', fac.end_stake_no),
+                        fac.end_stake_no,
+                        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+                               (substring_index(fac.end_stake_no, '.', -1)))))   endStakeNo
+        FROM t_bdmp_assets_facilities_gantry gantry
+                 LEFT JOIN t_bdmp_assets_facilities fac ON gantry.facilities_id = fac.facilities_id
+                 LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+                 LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        WHERE fac.facilities_id_old = #{deviceNumber}
+    </select>
+
+    <!-- 获取桥梁统计信息按路段分组 -->
+    <select id="getBridgeInfoByWay" resultType="java.util.HashMap">
+        SELECT bridge.operating_waysection_id as                                 waysectionId,
+               ROUND(sum(cast(bridge.bridge_meter AS DECIMAL(10, 2))) / 1000, 4) bridgeMileage
+        FROM (
+                 SELECT *
+                 FROM t_bdmp_assets_facilities_bridge
+                 WHERE bridge_id IN (SELECT max(bridge_id) AS bridge_id
+                                     FROM t_bdmp_assets_facilities_bridge
+                                     WHERE bridge_name NOT LIKE '%右幅%'
+                                     GROUP BY operating_waysection_id, facilities_id, bridge_name)) bridge
+        GROUP BY bridge.operating_waysection_id
+    </select>
+
+    <!-- 获取隧道统计信息按路段分组 -->
+    <select id="getTunnelInfoByWay" resultType="java.util.HashMap">
+        SELECT tunnel.waysection_id as                   waysectionId,
+               ROUND(sum(tunnel.tunnel_meter) / 1000, 4) tunnelMileage
+        FROM (
+                 SELECT fac.facilities_id,
+                        fac.waysection_id,
+                        tunnel.tunnel_long_type_code,
+                        max(cast(tunnel.tunnel_meter AS DECIMAL(10, 2))) AS tunnel_meter
+                 FROM t_bdmp_assets_facilities fac
+                          LEFT JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+                 WHERE fac.facilities_type = '32330400'
+                   and (fac.parent_id is null or fac.parent_id = '')
+                 GROUP BY fac.facilities_id
+             ) tunnel
+        GROUP BY tunnel.waysection_id
+    </select>
+
+
+    <!-- 获取运营公司的桥梁基本信息 -->
+    <select id="getBridgeInfo" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.BridgeInfo">
+        select
+        count(*) bridgeNum,
+        sum(case when bridge.across_radius_type_code = 1 then 1 else 0 end) especialLongBridgeNum,
+        sum(case when bridge.across_radius_type_code = 2 then 1 else 0 end) longBridgeNum,
+        sum(case when bridge.across_radius_type_code = 3 then 1 else 0 end) middleBridgeNum,
+        sum(case when bridge.across_radius_type_code = 4 then 1 else 0 end) smallBridgeNum,
+        ROUND(sum(cast(bridge.bridge_meter as DECIMAL(10,2)))/1000,4) bridgeMileage
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) bridge
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in(
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType ">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.operating_waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and bridge.facilities_id = #{orgId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 获取运营公司隧道基本信息 -->
+    <select id="getTunnelInfo" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.TunnelInfo">
+        select
+        count(*) tunnelNum,
+        sum(case when tunnel.tunnel_long_type_code = 1 then 1 else 0 end) especialLongTunnelNum,
+        sum(case when tunnel.tunnel_long_type_code = 2 then 1 else 0 end) longTunnelNum,
+        sum(case when tunnel.tunnel_long_type_code = 3 then 1 else 0 end) middleTunnelNum,
+        sum(case when tunnel.tunnel_long_type_code = 4 then 1 else 0 end) smallTunnelNum,
+        ROUND(sum(tunnel.tunnel_meter)/1000,4) tunnelMileage
+        from
+        (
+        select
+        fac.facilities_id,
+        tunnel.tunnel_long_type_code,
+        max(cast(tunnel.tunnel_meter as DECIMAL(10,2))) as tunnel_meter
+        from t_bdmp_assets_facilities fac
+        left join t_bdmp_assets_facilities_tunnel tunnel on fac.facilities_id = tunnel.facilities_id
+        <where>
+            and fac.facilities_type = '32330400'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in(
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType ">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) as tunnel
+    </select>
+
+    <!-- 获取运营公司服务区基本信息 -->
+    <select id="getServiceAreaInfo" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.ServiceAreaInfo">
+        select
+        count(*) serviceAreaNum,
+        sum(case when serviceArea.type = '1+' then 1 else 0 end) onePlusServiceAreaNum,
+        sum(case when serviceArea.type = '1' then 1 else 0 end) oneServiceAreaNum,
+        sum(case when serviceArea.type = '2' then 1 else 0 end) twoServiceAreaNum,
+        sum(case when serviceArea.type = '3' then 1 else 0 end) threeServiceAreaNum,
+        sum(case when serviceArea.type = '4' then 1 else 0 end) fourServiceAreaNum
+        from
+        (
+        select
+        fac.facilities_id,
+        serviceArea.type
+        from t_bdmp_assets_facilities fac
+        LEFT JOIN t_bdmp_assets_facilities_service_area serviceArea on fac.facilities_id = serviceArea.facilities_id
+        <where>
+            and fac.facilities_type = '32330800'
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in(
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) as serviceArea
+    </select>
+
+    <!-- 查询桥梁统计（按类型） -->
+    <select id="listBridgeCount" resultType="java.util.HashMap">
+        select
+        across_radius_type_code as dictKey,
+        count(*) as total
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) bridge
+        <where>
+            and bridge.bridge_name not like '%右幅%'
+            <if test=" null != search and '' != search ">
+                and ( bridge_name like concat('%',#{search},'%')
+                    or bridge_center_stake like concat('%',replace(replace(upper(#{search}),'K',''),'+','.'),'%'))
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.operating_waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and bridge.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by bridge.across_radius_type_code
+    </select>
+
+    <!-- 查询桥梁信息 -->
+    <select id="listBridge" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select
+        bridge.bridge_id as id,
+        bridge.bridge_name as name,
+        bridge.across_radius_type_code as dictKey,
+        bridge.across_radius_type_name as dictName,
+        bridge.longitude,
+        bridge.latitude,
+        bridge.admin_region_code as adminRegionCode,
+        bridge.admin_region_name as adminRegionName,
+        bridge.facilities_id as originId,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        bridge.operating_waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        concat('K',(substring_index(bridge.bridge_center_stake,'.',1)),'+',(substring_index(bridge.bridge_center_stake,'.',-1)))
+        centerOffNo,
+        concat('K',(substring_index(bridge.bridge_start_stake,'.',1)),'+',(substring_index(bridge.bridge_start_stake,'.',-1)))
+        beginStakeNo,
+        concat('K',(substring_index(bridge.bridge_end_stake,'.',1)),'+',(substring_index(bridge.bridge_end_stake,'.',-1)))
+        endStakeNo
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) bridge
+        left join (select * from t_bdmp_assets_facilities where facilities_type='32330600') fac on bridge.facilities_id
+        = fac.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = bridge.operating_waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( bridge_name like concat('%',#{search},'%')
+                          or bridge_center_stake like concat('%',replace(replace(upper(#{search}),'K',''),'+','.'),'%')
+                          or bridge_center_stake like concat('%',#{search},'%')
+                    )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.operating_waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and bridge.facilities_id = #{orgId}
+            </if>
+            <if test="null != dictKeys and '' != dictKeys">
+                and bridge.across_radius_type_code in
+                <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{dictKey}
+                    </trim>
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询桥梁信息 -->
+    <select id="listBridge1" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select
+        bridge.bridge_id as id,
+        bridge.bridge_name as name,
+        bridge.across_radius_type_code as dictKey,
+        bridge.across_radius_type_name as dictName,
+        bridge.longitude,
+        bridge.latitude,
+        bridge.admin_region_code as adminRegionCode,
+        bridge.admin_region_name as adminRegionName,
+        bridge.facilities_id as originId,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        "桥梁" as typeName,
+        bridge.operating_waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        concat('K',(substring_index(bridge.bridge_center_stake,'.',1)),'+',(substring_index(bridge.bridge_center_stake,'.',-1)))
+        centerOffNo,
+        concat('K',(substring_index(bridge.bridge_start_stake,'.',1)),'+',(substring_index(bridge.bridge_start_stake,'.',-1)))
+        beginStakeNo,
+        concat('K',(substring_index(bridge.bridge_end_stake,'.',1)),'+',(substring_index(bridge.bridge_end_stake,'.',-1)))
+        endStakeNo
+        from
+        (select * from t_bdmp_assets_facilities_bridge
+        where bridge_id in( select max(bridge_id) as bridge_id from t_bdmp_assets_facilities_bridge
+        where bridge_name not like '%右幅%' group by operating_waysection_id,facilities_id,bridge_name )
+        <if test="null != facStatisticsBo.bridgeLevels and '' != facStatisticsBo.bridgeLevels.size() > 0">
+            and across_radius_type_code in
+            <foreach collection="facStatisticsBo.bridgeLevels" item="bridgeLevel" open="(" separator="," close=")">
+                #{bridgeLevel}
+            </foreach>
+        </if>
+        ) bridge
+        left join (select * from t_bdmp_assets_facilities where facilities_type='32330600') fac on bridge.facilities_id
+        = fac.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = bridge.operating_waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != facStatisticsBo.search and '' != facStatisticsBo.search ">
+                and ( bridge_name like concat('%',#{facStatisticsBo.search},'%') or bridge_center_stake like
+                concat('%',#{facStatisticsBo.search},'%'))
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id =
+                #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and bridge.operating_waysection_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and bridge.facilities_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test="null != dictKeys and '' != dictKeys">
+                and bridge.across_radius_type_code in
+                <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{dictKey}
+                    </trim>
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询桥梁信息（过江大桥） -->
+    <select id="listBridgeByCrossRiver" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select
+        bridge.bridge_id as id,
+        bridge.bridge_name as name,
+        bridge.across_radius_type_code as dictKey,
+        bridge.across_radius_type_name as dictName,
+        bridge.longitude,
+        bridge.latitude,
+        bridge.admin_region_code as adminRegionCode,
+        bridge.admin_region_name as adminRegionName,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        '32330600' as type,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        concat('K',(substring_index(bridge.bridge_center_stake,'.',1)),'+',(substring_index(bridge.bridge_center_stake,'.',-1)))
+        centerOffNo,
+        concat('K',(substring_index(bridge.bridge_start_stake,'.',1)),'+',(substring_index(bridge.bridge_start_stake,'.',-1)))
+        beginStakeNo,
+        concat('K',(substring_index(bridge.bridge_end_stake,'.',1)),'+',(substring_index(bridge.bridge_end_stake,'.',-1)))
+        endStakeNo
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' and bridge_type='跨长江桥梁' group by
+        operating_waysection_id,facilities_id,bridge_name )) bridge
+        left join (select * from t_bdmp_assets_facilities where facilities_type='32330600') fac on bridge.facilities_id
+        = fac.facilities_id
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.operating_waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and bridge.operating_waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.operating_waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and bridge.facilities_id = #{orgId}
+            </if>
+        </where>
+        order by bridge.original_operation_sort_code
+    </select>
+
+    <!-- 查询收费站统计（按类型） -->
+    <select id="listTollStationCount" resultType="java.util.HashMap">
+        select dictKey, count(*) as total from (
+        SELECT
+        CASE WHEN fac.`status` = '1' THEN 1 ELSE 2 END AS dictKey
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, station.toll_station_name) like concat('%',#{search},'%')
+                or fac.center_off_no_des like concat('%',#{search},'%')
+                or fac.center_off_no like concat('%',#{search},'%')
+                or station.toll_station_stake like concat('%',replace(replace(upper(#{search}),'K',''),'+','.'),'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) stat group by dictKey
+    </select>
+
+    <!-- 查询收费站信息 -->
+    <select id="listTollStation" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select fac.*,org.tel_phone as monitorTelPhone from ( select * from (
+        SELECT
+        IFNULL(fac.facilities_name, station.toll_station_name) as name,
+        IFNULL( fac.longitude, station.longitude ) longitude,
+        IFNULL( fac.latitude, station.latitude ) latitude,
+        case
+        when fac.`status` = 0 then 2
+        when (fac.`status` is null or fac.`status` = '') then 1
+        else fac.`status`end AS dictKey,
+        station.admin_region_code as adminRegionCode,
+        station.admin_region_name as adminRegionName,
+        station.station_country_id as stationCountryId,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.manage_id,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.is_otn_site as isOtnSite,
+        fac.national_site_type as nationalSiteType,
+        fac.provincial_site_type as provincialSiteType,
+        fac.site_category as siteCategory,
+        fac.computer_room_form as computerRoomForm,
+        fac.otn_remark as otnRemark,
+        fac.baidu_code as baiduCode,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        org1.parent_id,
+        (
+        CASE
+        WHEN (
+        IFNULL(fac.center_off_no, station.toll_station_stake) IS NOT NULL
+        AND '' != IFNULL(fac.center_off_no, station.toll_station_stake)
+        AND '0' != IFNULL(fac.center_off_no, station.toll_station_stake)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, station.toll_station_stake), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) centerOffNo,
+        (
+        CASE
+        WHEN (
+        IFNULL(fac.begin_stake_no, station.road_start_stake) IS NOT NULL
+        AND '' != IFNULL(fac.begin_stake_no, station.road_start_stake)
+        AND '0' != IFNULL(fac.begin_stake_no, station.road_start_stake)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.begin_stake_no, station.road_start_stake), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) beginStakeNo,
+        (
+        CASE
+        WHEN (
+        IFNULL(fac.end_stake_no, station.road_end_stake) IS NOT NULL
+        AND '' != IFNULL(fac.end_stake_no, station.road_end_stake)
+        AND '0' != IFNULL(fac.end_stake_no, station.road_end_stake)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.end_stake_no, station.road_end_stake), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        LEFT JOIN t_bdmp_sys_org org1 ON fac.manage_id = org1.org_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, station.toll_station_name) like concat('%',#{search},'%')
+                or fac.center_off_no_des like concat('%',#{search},'%')
+                or fac.center_off_no like concat('%',#{search},'%')
+                or station.toll_station_stake like concat('%',replace(replace(upper(#{search}),'K',''),'+','.'),'%')
+                or station.toll_station_stake like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+        ) as fac
+        left join t_bdmp_sys_org as org on fac.parent_id = org.org_id
+    </select>
+
+    <!-- 查询收费站信息 -->
+    <select id="listTollStation1" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name, station.toll_station_name) as name,
+        IFNULL( fac.longitude, station.longitude ) longitude,
+        IFNULL( fac.latitude, station.latitude ) latitude,
+        CASE WHEN fac.`status` = '1' THEN 1 ELSE 2 END AS dictKey,
+        station.admin_region_code as adminRegionCode,
+        station.admin_region_name as adminRegionName,
+        station.station_country_id as stationCountryId,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.is_otn_site as isOtnSite,
+        fac.national_site_type as nationalSiteType,
+        fac.provincial_site_type as provincialSiteType,
+        fac.site_category as siteCategory,
+        fac.computer_room_form as computerRoomForm,
+        fac.otn_remark as otnRemark,
+        fac.baidu_code as baiduCode,
+        "收费站" as typeName,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (
+        case when (fac.center_off_no is null or fac.center_off_no = '') and (station.toll_station_stake is null or station.toll_station_stake = '')
+             then null
+             else
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IF((fac.center_off_no is null or fac.center_off_no = ''),station.toll_station_stake,fac.center_off_no), '.',
+        '+')), 'K', ''))
+            end
+        ) centerOffNo,
+        (
+        case when (fac.begin_stake_no is null or fac.begin_stake_no = '') and (station.road_start_stake is null or station.road_start_stake = '')
+             then null
+             else
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(if((fac.begin_stake_no is null or fac.begin_stake_no = ''),station.road_start_stake,fac.begin_stake_no), '.',
+        '+')), 'K', ''))
+        END
+        ) beginStakeNo,
+        (
+        case when (fac.end_stake_no is null or fac.end_stake_no = '') and (station.road_end_stake is null or station.road_end_stake = '')
+             then null
+             else
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(if((fac.end_stake_no is null or fac.end_stake_no = ''),station.road_end_stake,fac.end_stake_no), '.',
+        '+')), 'K', ''))
+        END
+        ) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_toll_station station ON fac.facilities_id = station.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != facStatisticsBo.search and '' != facStatisticsBo.search ">
+                and ( IFNULL(fac.facilities_name, station.toll_station_name) like
+                concat('%',#{facStatisticsBo.search},'%')
+                or fac.center_off_no_des like concat('%',#{facStatisticsBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id =
+                #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and fac.waysection_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and fac.facilities_id = #{facStatisticsBo.orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询服务区统计(按类型) -->
+    <select id="listServiceAreaCount" resultType="java.util.HashMap">
+        select dictKey, count(*) as total from (
+        SELECT
+        (case when servicaArea.type = '1+' then 1
+        when servicaArea.type = '1' then 2
+        when servicaArea.type = '2' then 3
+        when servicaArea.type = '3' or servicaArea.type = '4' then 4 end)
+        AS dictKey
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_service_area servicaArea ON fac.facilities_id = servicaArea.facilities_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, servicaArea.server_name) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) stat group by dictKey
+    </select>
+
+    <!-- 查询服务区信息 -->
+    <select id="listServiceArea" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name, servicaArea.server_name) as name,
+        IFNULL( fac.longitude, servicaArea.longitude ) longitude,
+        IFNULL( fac.latitude, servicaArea.latitude ) latitude,
+        (case when servicaArea.type = '1+' then 1
+        when servicaArea.type = '1' then 2
+        when servicaArea.type = '2' then 3
+        when servicaArea.type = '3' or servicaArea.type = '4' then 4 end)
+        AS dictKey,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (
+        CASE
+
+        WHEN (
+        IFNULL(fac.center_off_no, servicaArea.road_no) IS NOT NULL
+        AND '' != IFNULL(fac.center_off_no, servicaArea.road_no)
+        AND '0' != IFNULL(fac.center_off_no, servicaArea.road_no)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, servicaArea.road_no), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) centerOffNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_service_area servicaArea ON fac.facilities_id = servicaArea.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, servicaArea.server_name) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                or servicaArea.road_no like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询服务区信息 -->
+    <select id="listServiceArea1" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name, servicaArea.server_name) as name,
+        IFNULL( fac.longitude, servicaArea.longitude ) longitude,
+        IFNULL( fac.latitude, servicaArea.latitude ) latitude,
+        (case when servicaArea.type = '1+' then 1
+        when servicaArea.type = '1' then 2
+        when servicaArea.type = '2' then 3
+        when servicaArea.type = '3' or servicaArea.type = '4' then 4 end)
+        AS dictKey,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        "服务区" as typeName,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (
+        CASE
+
+        WHEN (
+        IFNULL(fac.center_off_no, servicaArea.road_no) IS NOT NULL
+        AND '' != IFNULL(fac.center_off_no, servicaArea.road_no)
+        AND '0' != IFNULL(fac.center_off_no, servicaArea.road_no)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, servicaArea.road_no), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) centerOffNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_service_area servicaArea ON fac.facilities_id = servicaArea.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != facStatisticsBo.search and '' != facStatisticsBo.search ">
+                and ( IFNULL(fac.facilities_name, servicaArea.server_name) like
+                concat('%',#{facStatisticsBo.search},'%') or
+                fac.center_off_no_des like concat('%',#{facStatisticsBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id =
+                #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and fac.waysection_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and fac.facilities_id = #{facStatisticsBo.orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询门架统计(按统计) -->
+    <select id="listDoorFrameCount" resultType="java.util.HashMap">
+        select dictKey, count(*) as total from (
+        SELECT
+        case when IFNULL(fac.is_province_door_frame, gantry.is_province) = 1 then 1 else 2 end AS dictKey
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_gantry gantry ON fac.facilities_id = gantry.facilities_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name,gantry.section) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) stat group by dictKey
+    </select>
+
+    <!-- 查询门架信息 -->
+    <select id="listDoorFrame" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name,gantry.section) as name,
+        gantry.nei_provinces as neiProvinces,
+        gantry.loc_direction as locDirection,
+        fac.longitude longitude,
+        fac.latitude latitude,
+        case when IFNULL(fac.is_province_door_frame, gantry.is_province) = 1 then 1 else 2 end AS dictKey,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (
+        CASE
+
+        WHEN (
+        IFNULL(fac.center_off_no, gantry.real_gantry_id) IS NOT NULL
+        AND '' != IFNULL(fac.center_off_no, gantry.real_gantry_id)
+        AND '0' != IFNULL(fac.center_off_no, gantry.real_gantry_id)) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, gantry.real_gantry_id), '.',
+        '+')), 'K', ''))
+        ELSE NULL
+        END
+        ) centerOffNo,
+        upper(if(locate('K',fac.begin_stake_no),
+        fac.begin_stake_no,
+        concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+        (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+        upper(if(locate('K',fac.end_stake_no),
+        fac.end_stake_no,
+        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+        (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_gantry gantry ON fac.facilities_id = gantry.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name,gantry.section) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询门架信息 -->
+    <select id="listDoorFrame1" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name,gantry.section) as name,
+        gantry.nei_provinces as neiProvinces,
+        gantry.loc_direction as locDirection,
+        fac.longitude longitude,
+        fac.latitude latitude,
+        case when IFNULL(fac.is_province_door_frame, gantry.is_province) = 1 then 1 else 2 end AS dictKey,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        "门架" as typeName,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (
+        CASE
+
+        WHEN (
+        IFNULL(fac.center_off_no, gantry.real_gantry_id) IS NOT NULL
+        AND '' != IFNULL(fac.center_off_no, gantry.real_gantry_id)
+        AND '0' != IFNULL(fac.center_off_no, gantry.real_gantry_id)) THEN
+        (
+        CASE
+
+        WHEN '0' = INSTR( UPPER( IFNULL(fac.center_off_no, gantry.real_gantry_id)), 'K' ) THEN
+        concat(
+        'K',
+        REPLACE(UPPER(REPLACE(IFNULL(fac.center_off_no, gantry.real_gantry_id), '.',
+        '+')), 'K', '')) ELSE UPPER(
+        IFNULL(fac.center_off_no, gantry.real_gantry_id))
+        END
+        )
+        ELSE NULL
+        END
+        ) centerOffNo,
+
+        upper(if(locate('K',fac.begin_stake_no),
+        fac.begin_stake_no,
+        concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+        (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+
+        upper(if(locate('K',fac.end_stake_no),
+        fac.end_stake_no,
+        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+        (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_gantry gantry ON fac.facilities_id = gantry.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != facStatisticsBo.search and '' != facStatisticsBo.search ">
+                and ( IFNULL(fac.facilities_name,gantry.section) like concat('%',#{facStatisticsBo.search},'%') or
+                fac.center_off_no_des like concat('%',#{facStatisticsBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id =
+                #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and fac.waysection_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and fac.facilities_id = #{facStatisticsBo.orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询隧道统计(按类型) -->
+    <select id="listTunnelCount" resultType="java.util.HashMap">
+        select dictKey, count(*) as total from (
+        SELECT
+        tunnel.tunnel_long_type_code AS dictKey
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        left JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, tunnel.tunnel_name) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) stat group by dictKey
+    </select>
+
+    <!-- 查询隧道信息 -->
+    <select id="listTunnel" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name, tunnel.tunnel_name) as name,
+        IFNULL(fac.longitude, tunnel.longitude ) longitude,
+        IFNULL(fac.latitude, tunnel.latitude ) latitude,
+        tunnel.tunnel_long_type_code AS dictKey,
+        tunnel.tunnel_long_type_name AS dictName,
+        tunnel.admin_region_code as adminRegionCode,
+        tunnel.admin_region_name as adminRegionName,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (CASE
+        WHEN (IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) IS NOT NULL AND
+        '' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) AND
+        '0' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake)) THEN concat('K', REPLACE(
+        UPPER(REPLACE(IFNULL(fac.center_off_no, tunnel.tunnel_center_stake), '.', '+')), 'K', ''))
+        ELSE NULL END) centerOffNo,
+        (CASE
+        WHEN (IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) IS NOT NULL AND
+        '' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) AND
+        '0' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake)) THEN concat('K', REPLACE(
+        UPPER(REPLACE(IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake), '.', '+')), 'K', ''))
+        ELSE NULL END) beginStakeNo,
+        upper(if(locate('K',fac.end_stake_no),
+        fac.end_stake_no,
+        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+        (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        left JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != search and '' != search ">
+                and ( IFNULL(fac.facilities_name, tunnel.tunnel_name) like concat('%',#{search},'%') or
+                fac.center_off_no_des like concat('%',#{search},'%') or fac.center_off_no like concat('%',#{search},'%')
+                or tunnel.tunnel_center_stake like concat('%',replace(replace(upper(#{search}),'K',''),'+','.'),'%')
+                or tunnel.tunnel_center_stake like concat('%',#{search},'%')
+                )
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询隧道信息 -->
+    <select id="listTunnel1" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesInfoBO">
+        select * from (
+        SELECT
+        IFNULL(fac.facilities_name, tunnel.tunnel_name) as name,
+        IFNULL(fac.longitude, tunnel.longitude ) longitude,
+        IFNULL(fac.latitude, tunnel.latitude ) latitude,
+        tunnel.tunnel_long_type_code AS dictKey,
+        tunnel.tunnel_long_type_name AS dictName,
+        tunnel.admin_region_code as adminRegionCode,
+        tunnel.admin_region_name as adminRegionName,
+        fac.facilities_id_old as originId,
+        fac.facilities_id AS id,
+        fac.facilities_code as infoNo,
+        fac.status as status,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        "隧道" as typeName,
+        fac.waysection_id waysectionId,
+        way.waysection_name waysectionName,
+        org.org_id orgId,
+        org.org_short_name orgName,
+        (CASE
+        WHEN (IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) IS NOT NULL AND
+        '' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake) AND
+        '0' != IFNULL(fac.center_off_no, tunnel.tunnel_center_stake)) THEN concat('K', REPLACE(
+        UPPER(REPLACE(IFNULL(fac.center_off_no, tunnel.tunnel_center_stake), '.', '+')), 'K', ''))
+        ELSE NULL END) centerOffNo,
+        (CASE
+        WHEN (IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) IS NOT NULL AND
+        '' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake) AND
+        '0' != IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake)) THEN concat('K', REPLACE(
+        UPPER(REPLACE(IFNULL(fac.begin_stake_no, tunnel.tunnel_entrance_stake), '.', '+')), 'K', ''))
+        ELSE NULL END) beginStakeNo,
+        upper(if(locate('K',fac.end_stake_no),
+        fac.end_stake_no,
+        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+        (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        left JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            <if test=" null != facStatisticsBo.search and '' != facStatisticsBo.search ">
+                and ( IFNULL(fac.facilities_name, tunnel.tunnel_name) like concat('%',#{facStatisticsBo.search},'%') or
+                fac.center_off_no_des like concat('%',#{facStatisticsBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id =
+                #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and fac.waysection_id = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and fac.facilities_id = #{facStatisticsBo.orgId}
+            </if>
+        </where>
+        group by fac.facilities_id
+        ) a
+        <if test="null != dictKeys and '' != dictKeys">
+            where a.dictKey in
+            <foreach collection="dictKeys.split(',')" item="dictKey" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{dictKey}
+                </trim>
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 获取附近桥梁资源 -->
+    <select id="getBridgeByPoint" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacResourceNearBO">
+        select facilitiesId,
+        facilitiesName,
+        facilitiesCode,
+        CODE,
+        STATUS,
+        originId,
+        pileNumber,
+        dictKey,
+        dictName,
+        derection,
+        isProvince,
+        longitude,
+        latitude,
+        location,
+        isMonitor,
+        baiduCode,
+        waysectionId,
+        waysectionName,
+        orgId,
+        orgName,
+        distanceMeter / 1000 AS distanceKm,
+        beginStakeNo,
+        endStakeNo
+        from (
+        select fac.*,
+        round(6378.137 * 2 *
+        asin(
+        sqrt(
+        pow(sin(( #{latitude} * PI() / 180 - latitude * pi() / 180) / 2 ), 2)
+        + cos(#{latitude} * pi() / 180) * cos(latitude * pi() / 180) * pow(sin((#{longitude} * PI() / 180 - longitude *
+        pi() / 180) / 2), 2)
+        )
+        ) * 1000
+        ) as distanceMeter
+        from(
+        select
+        bridge.bridge_id as facilitiesId,
+        bridge.bridge_name as facilitiesName,
+        '32330600' as code,
+        fac.facilities_code as facilitiesCode,
+        fac.status as status,
+        fac.direction as derection,
+        fac.is_monitor as isMonitor,
+        fac.baidu_code as baiduCode,
+        fac.map_url as mapUrl,
+        fac.location as location,
+        bridge.facilities_id as originId,
+        bridge.bridge_center_stake as pileNumber,
+        concat('K',(substring_index(bridge.bridge_start_stake,'.',1)),'+',(substring_index(bridge.bridge_start_stake,'.',-1)))
+        beginStakeNo,
+        concat('K',(substring_index(bridge.bridge_end_stake,'.',1)),'+',(substring_index(bridge.bridge_end_stake,'.',-1)))
+        endStakeNo,
+        bridge.across_radius_type_code as dictKey,
+        bridge.across_radius_type_name as dictName,
+        '' as isProvince,
+        bridge.longitude as longitude,
+        bridge.latitude as latitude,
+        bridge.operating_waysection_id as waysectionId,
+        way.waysection_name as waysectionName,
+        org.org_id as orgId,
+        org.org_short_name as orgName
+        from
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )
+            <if test="null != bridgeLevel and '' != bridgeLevel">
+                and across_radius_type_code = #{bridgeLevel}
+            </if>
+            ) bridge
+        left join (select * from t_bdmp_assets_facilities where facilities_type='32330600') fac on bridge.facilities_id
+        = fac.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = bridge.operating_waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        <where>
+            and bridge.longitude is not null and bridge.longitude !=0 and bridge.longitude !='' and bridge.latitude is
+            not null and bridge.latitude !=0 and bridge.latitude !=''
+            <if test="null != wayIds and '' != wayIds">
+                and fac.waysection_id in
+                <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{wayId}
+                    </trim>
+                </foreach>
+            </if>
+        </where>
+        ) fac
+        ) a
+        where a.distanceMeter &lt; #{distanceKm} * 1000 order by a.distanceMeter asc
+    </select>
+
+    <!-- 获取附近设施资源 -->
+    <select id="getFacByPoint" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacResourceNearBO">
+        select
+        facilitiesId,facilitiesName,facilitiesCode,code,status,originId,pileNumber,derection,isProvince,longitude,latitude,location,isMonitor,baiduCode,waySectionId,waysectionName,orgId,orgName,distanceMeter/1000
+        as distanceKm
+        from (
+        select fac.*,
+        way.waysection_name as waysectionName,
+        org.org_id as orgId,
+        org.org_short_name as orgName,
+        round(6378.137 * 2 *
+        asin(
+        sqrt(
+        pow(sin(( #{latitude} * PI() / 180 - latitude * pi() / 180) / 2 ), 2)
+        + cos(#{latitude} * pi() / 180) * cos(latitude * pi() / 180) * pow(sin((#{longitude} * PI() / 180 - longitude *
+        pi() / 180) / 2), 2)
+        )
+        ) * 1000
+        ) as distanceMeter
+        from(
+        select
+        facilities_id as facilitiesId,
+        facilities_name as facilitiesName,
+        facilities_code as facilitiesCode,
+        ( case when ( 0 &lt; locate( '323307', facilities_type )) then '32330700' else facilities_type end ) as code,
+        status as status,
+        facilities_id_old as originId,
+        center_off_no as pileNumber,
+        direction as derection,
+        is_province_door_frame as isProvince,
+        is_monitor as isMonitor,
+        baidu_code as baiduCode,
+        map_url as mapUrl,
+        longitude as longitude,
+        latitude as latitude,
+        location as location,
+        waysection_id AS waySectionId
+        from t_bdmp_assets_facilities
+        <where>
+            and longitude is not null and longitude !=0 and longitude !='' and latitude is not null and latitude !=0 and
+            latitude !=''
+            <if test="null != wayIds and '' != wayIds">
+                and waysection_id in
+                <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{wayId}
+                    </trim>
+                </foreach>
+            </if>
+            <if test="null != codes and '' != codes">
+                and facilities_type in
+                <foreach collection="codes.split(',')" item="code" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{code}
+                    </trim>
+                </foreach>
+            </if>
+        </where>
+        ) fac
+        LEFT JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waySectionId
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        ) a
+        where a.distanceMeter &lt; #{distanceKm} * 1000 order by a.distanceMeter asc
+    </select>
+
+    <!--获取收费站车道详情-->
+    <select id="getLaneByTollStationId"
+            resultType="com.rhy.bdmp.open.modules.assets.domain.po.FacilitiesTollStationLane">
+        select * from t_bdmp_assets_facilities_toll_station_lane
+        <where>
+            toll_station_id = #{tollStationId}
+        </where>
+    </select>
+
+    <!--设施分组统计(除桥梁、隧道)-->
+    <select id="facilitiesGroupByNodeType" resultType="map">
+        select
+        <choose>
+            <when test=" 'group' == nodeType">
+                manage_id as id, max(org_name) as name, max(org_short_name) as shortName, count(*) as num
+            </when>
+            <when test=" 'org' == nodeType">
+                waysection_id as id, max(waysection_name) as name, max(waysection_s_name) as shortName, count(*) as num
+            </when>
+            <when test=" 'way' == nodeType">
+                waysection_id as id, waysection_name as name, max(waysection_s_name) as shortName, count(*) as num
+            </when>
+            <otherwise>
+                facilities_id as id, facilities_name as name, count(*) as num
+            </otherwise>
+        </choose>
+        from (
+        SELECT fac.facilities_id, fac.facilities_name,
+        fac.waysection_id,way.waysection_name,way.waysection_s_name,way.manage_id,org.org_name,org.org_short_name
+        FROM
+        ( SELECT * FROM t_bdmp_assets_facilities WHERE
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        AND ( parent_id IS NULL OR parent_id = '' ) ) fac
+        LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        ) fac
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and fac.manage_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and fac.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and fac.facilities_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and fac.manage_id in ( select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId} )
+            </if>
+            <if test=" 'org' == nodeType">
+                and fac.manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and fac.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and fac.facilities_id = #{orgId}
+            </if>
+        </where>
+        <if test=" 'group' == nodeType">
+            group by manage_id having manage_id is not null order by num desc
+        </if>
+        <if test=" 'org' == nodeType">
+            group by waysection_id having waysection_id is not null order by num desc
+        </if>
+    </select>
+
+    <!--隧道分组统计-->
+    <select id="tunnelGroupByNodeType" resultType="map">
+        select
+        <choose>
+            <when test=" 'group' == nodeType">
+                manage_id as id, max(org_name) as name, max(org_short_name) as shortName, dictKey, max(dictName) as
+                dictName, count(*) as num
+            </when>
+            <when test=" 'org' == nodeType">
+                waysection_id as id, max(waysection_name) as name, max(waysection_s_name) as shortName, dictKey,
+                max(dictName) as dictName, count(*) as num
+            </when>
+            <when test=" 'way' == nodeType">
+                waysection_id as id, waysection_name as name, max(waysection_s_name) as shortName, dictKey,
+                max(dictName) as dictName, count(*) as num
+            </when>
+            <otherwise>
+                facilities_id as id, facilities_name as name, dictKey, max(dictName) as dictName, count(*) as num
+            </otherwise>
+        </choose>
+        from (
+        SELECT fac.facilities_id, max(fac.facilities_name) as facilities_name, max(tunnel.tunnel_long_type_code) AS
+        dictKey, max(tunnel.tunnel_long_type_name) AS dictName, max(fac.waysection_id) as waysection_id,
+        max(way.waysection_name) as waysection_name, max(way.waysection_s_name) as waysection_s_name, max(way.manage_id)
+        as manage_id, max(org.org_name) as org_name, max(org.org_short_name) as org_short_name
+        FROM
+        (
+        select * from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+        facilities_type IN
+        <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+            <trim>
+                #{facilitiesType}
+            </trim>
+        </foreach>
+        ) AS fac
+        LEFT JOIN t_bdmp_assets_facilities_tunnel tunnel ON fac.facilities_id = tunnel.facilities_id
+        LEFT JOIN t_bdmp_assets_waysection way ON fac.waysection_id = way.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        group by fac.facilities_id
+        ) tunnell
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and tunnell.manage_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and tunnell.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and tunnell.facilities_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and tunnell.manage_id in ( select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id =
+                #{orgId} )
+            </if>
+            <if test=" 'org' == nodeType">
+                and tunnell.manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and tunnell.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and tunnell.facilities_id = #{orgId}
+            </if>
+        </where>
+        <if test=" 'group' == nodeType">
+            group by manage_id,dictKey having (manage_id is not null and dictKey is not null and dictKey != '') order by
+            num desc
+        </if>
+        <if test=" 'org' == nodeType">
+            group by waysection_id,dictKey having (waysection_id is not null and dictKey is not null and dictKey != '')
+            order by num desc
+        </if>
+        <if test=" 'way' == nodeType">
+            group by waysection_id,dictKey having (waysection_id is not null and dictKey is not null and dictKey != '')
+            order by num desc
+        </if>
+    </select>
+
+    <!--桥梁分组统计-->
+    <select id="bridgeGroupByNodeType" resultType="map">
+        select
+        <choose>
+            <when test=" 'group' == nodeType">
+                manage_id as id, max(org_name) as name, max(org_short_name) as shortName, dictKey, max(dictName) as
+                dictName, count(*) as num
+            </when>
+            <when test=" 'org' == nodeType">
+                waysection_id as id, max(waysection_name) as name, max(waysection_s_name) as shortName, dictKey,
+                max(dictName) as dictName, count(*) as num
+            </when>
+            <when test=" 'way' == nodeType">
+                waysection_id as id, waysection_name as name, max(waysection_s_name) as shortName, dictKey,
+                max(dictName) as dictName, count(*) as num
+            </when>
+            <otherwise>
+                facilities_id as id, facilities_name as name, dictKey, max(dictName) as dictName, count(*) as num
+            </otherwise>
+        </choose>
+        from (
+        SELECT
+        fac.facilities_id, fac.bridge_name as facilities_name, fac.across_radius_type_code as dictKey,
+        fac.across_radius_type_name as dictName, fac.operating_waysection_id as waysection_id, way.waysection_name,
+        way.waysection_s_name, way.manage_id, org.org_name, org.org_short_name
+        FROM
+        (select * from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from
+        t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by
+        operating_waysection_id,facilities_id,bridge_name )) fac
+        LEFT JOIN t_bdmp_assets_waysection way ON fac.operating_waysection_id = way.waysection_id
+        LEFT JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+        ) bridge
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and bridge.manage_id in(
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and bridge.waysection_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and bridge.facilities_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and bridge.manage_id in ( select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and bridge.manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and bridge.waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and bridge.facilities_id = #{orgId}
+            </if>
+        </where>
+        <if test=" 'group' == nodeType">
+            group by manage_id,dictKey having (manage_id is not null and dictKey is not null and dictKey != '') order by
+            num desc
+        </if>
+        <if test=" 'org' == nodeType">
+            group by waysection_id,dictKey having (waysection_id is not null and dictKey is not null and dictKey != '')
+            order by num desc
+        </if>
+        <if test=" 'way' == nodeType">
+            group by waysection_id,dictKey having (waysection_id is not null and dictKey is not null and dictKey != '')
+            order by num desc
+        </if>
+    </select>
+
+    <!--查询设施列表-->
+    <select id="getFacList" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.FacilitiesVo">
+        select fac.*,
+        way.waysection_s_name waysectionName,
+        org.org_short_name orgName,
+        org.org_id orgId
+        from t_bdmp_assets_facilities fac
+        left join t_bdmp_assets_waysection way
+        on fac.waysection_id = way.waysection_id
+        left join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        where (fac.parent_id is null or fac.parent_id = '')
+        <if test="null != facilitiesTypes and facilitiesTypes.size() > 0">
+            and fac.facilities_type in
+            <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+                <trim>
+                    #{facilitiesType}
+                </trim>
+            </foreach>
+        </if>
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+    </select>
+
+    <!--查询设施详情-->
+    <select id="getFacById" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.FacilitiesVo">
+        select fac.*, way.waysection_s_name waysectionName, org.org_short_name orgName, org.org_id
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_sys_org org
+                           on way.manage_id = org.org_id
+        where fac.facilities_id = #{facId}
+    </select>
+
+    <select id="getTunnelGantry" resultType="java.util.Map">
+        select up_gantry_origin_id as upGantryOriginId, down_gantry_origin_id as downGantryOriginId
+        from t_bdmp_assets_tunnel_gantry_rel
+        where tunnel_geoinfo_id = #{geoId}
+    </select>
+
+    <select id="getEmployees" resultType="java.util.Map">
+        select nick_name                                                            employeeName,
+               phone,
+               (select name from t_bdmp_assets_dict_post where post_id = user.post) post
+        from t_bdmp_sys_user user
+        where org_id = (
+            select manage_id from t_bdmp_assets_facilities where facilities_id = #{stationId}
+            )
+    </select>
+    <select id="facStatistics" resultType="java.util.Map">
+        select * from (
+        select fac.facilities_id as id,
+        fac.facilities_name name,
+        fac.facilities_type facilitiesType,
+        fac.longitude,
+        fac.latitude,
+        fac.facilities_code infoNo,
+        fac.status,
+        fac.is_monitor isMonitor,
+        fac.map_url mapUrl,
+        fac.facilities_type type,
+        fac.is_otn_site isOtnSite,
+        fac.national_site_type nationalSiteType,
+        fac.provincial_site_type provincialSiteType,
+        fac.site_category siteCategory,
+        fac.computer_room_form computerRoomForm,
+        fac.otn_remark otnRemark,
+        fac.baidu_code baiduCode,
+        fac.facilities_id_old originId,
+        way.waysection_id as waysectionId,
+        way.waynet_id as waysectionNo,
+        way.waysection_name as waysectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        org.org_id as orgId,
+        org.org_short_name as orgName,
+        dict.name as typeName,
+        upper(if(locate('K',fac.center_off_no),
+        fac.center_off_no,
+        concat('K', (substring_index(fac.center_off_no, '.', 1)), '+',
+        (substring_index(fac.center_off_no, '.', -1))))) centerOffNo,
+        upper(if(locate('K',fac.begin_stake_no),
+        fac.begin_stake_no,
+        concat('K', (substring_index(fac.begin_stake_no, '.', 1)), '+',
+        (substring_index(fac.begin_stake_no, '.', -1))))) beginStakeNo,
+        upper(if(locate('K',fac.end_stake_no),
+        fac.end_stake_no,
+        concat('K', (substring_index(fac.end_stake_no, '.', 1)), '+',
+        (substring_index(fac.end_stake_no, '.', -1))))) endStakeNo
+        from t_bdmp_assets_facilities fac
+        inner join t_bdmp_assets_waysection way
+        on fac.waysection_id = way.waysection_id
+        inner join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        inner join t_bdmp_assets_dict dict on fac.facilities_type = dict.code
+        where (fac.parent_id is null or fac.parent_id = '')
+        ) temp
+        <where>
+            and temp.facilitiesType IN
+            <foreach collection="facStatisticsBo.facTypes" item="facType" separator="," open="(" close=")">
+                <trim>
+                    #{facType}
+                </trim>
+            </foreach>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and temp.orgId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and temp.waysectionId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and temp.id in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == facStatisticsBo.nodeType">
+                and temp.orgId in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{facStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 1 == facStatisticsBo.nodeType">
+                and temp.orgId = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 2 == facStatisticsBo.nodeType">
+                and temp.waysectionId = #{facStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == facStatisticsBo.nodeType">
+                and temp.id = #{facStatisticsBo.orgId}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getContactByPoint" resultType="java.util.HashMap">
+        SELECT vp.id, vp.`name`, vp.rel_toll_station_id AS facId,
+        fac.facilities_name AS facName
+        FROM t_bdmp_assets_facilities fac inner join t_bdmp_assets_vp_resource vp
+            on vp.rel_toll_station_id = fac.facilities_id AND vp.node_type = 2 and vp.datastatusid = 1
+        WHERE
+        fac.facilities_id in
+        <foreach collection="tollStationList" item="tollStation" open="(" close=")" separator=",">
+            #{tollStation.facilitiesId}
+        </foreach>
+        order by vp.sort
+    </select>
+
+    <select id="getFacIdByCode" resultType="java.lang.String">
+        select facilities_id as facId from t_bdmp_assets_facilities
+        where facilities_type in
+        <foreach collection="facCodes" item="facCode" open="(" separator="," close=")">
+            #{facCode}
+        </foreach>
+    </select>
+
+    <select id="getControlPointTel" resultType="java.lang.String">
+        select tel_phone from t_bdmp_sys_org where org_id = (
+                select parent_id from t_bdmp_sys_org
+                where org_id = (select manage_id from t_bdmp_assets_facilities where facilities_id = #{stationId})
+            )
+    </select>
+    <select id="getControlPointTels" resultType="java.util.Map">
+        select org.org_id as orgId,parentOrg.tel_phone as telPhone from t_bdmp_sys_org parentOrg
+        left join (
+            select parent_id,org_id from t_bdmp_sys_org
+            where org_id in (select manage_id from t_bdmp_assets_facilities
+            where facilities_id in
+            <foreach collection="facilitiesInfoBOS" item="fac" open="(" separator="," close=")">
+                #{fac.id}
+            </foreach>
+            )
+        ) as org
+        on parentOrg.org_id = org.parent_id
+        group by org.org_id
+    </select>
+</mapper>

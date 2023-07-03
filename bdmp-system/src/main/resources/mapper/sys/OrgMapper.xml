@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.OrgDao">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rhy.bdmp.system.modules.sys.domain.vo.OrgVo">
+        <id column="org_id" property="orgId"/>
+        <result column="org_name" property="orgName"/>
+        <result column="org_code" property="orgCode"/>
+        <result column="org_short_name" property="orgShortName"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="org_type" property="orgType"/>
+        <result column="description" property="description"/>
+        <result column="sort" property="sort"/>
+        <result column="datastatusid" property="datastatusid"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!--查找组织及其子组织集合-->
+    <select id="findOrgChildren" resultMap="BaseResultMap">
+        SELECT
+	        t.org_id,t.org_name,t.org_code,t.org_short_name,t.parent_id,t.org_type,t.description,t.sort,t.datastatusid,t.create_by,t.create_time,t.update_by,t.update_time
+        FROM
+	        (
+	        SELECT
+		        a.id,
+	        IF
+		        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+	        FROM
+		        ( SELECT org_id AS id, parent_id AS pid FROM t_bdmp_sys_org ) a,
+		        ( SELECT @pids := #{orgId} ) vars
+	        ) b
+	        JOIN t_bdmp_sys_org t ON b.id = t.org_id
+        WHERE
+	        b.ischild != '0' or t.org_id = #{orgId}
+    </select>
+
+
+    <!--查询组织及其父组织-->
+    <select id="findOrgParent" resultMap="BaseResultMap">
+        SELECT
+            t.org_id,t.org_name,t.org_code,t.org_short_name,t.parent_id,t.org_type,t.description,t.sort,t.datastatusid,t.create_by,t.create_time,t.update_by,t.update_time
+        FROM
+            (
+                SELECT
+                    @r AS _id,
+                    ( SELECT @r := parent_id FROM t_bdmp_sys_org WHERE org_id = _id limit 1) AS pid
+                FROM
+                    t_bdmp_sys_org h,
+                    ( SELECT @r := '111') vars
+            ) a
+                JOIN t_bdmp_sys_org t ON a._id = t.org_id;
+    </select>
+
+    <!--获取机构列表并判断该机构是否含有hasChild-->
+    <select id="listHasChildByQueryWraper" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.OrgVo">
+        select org.*,
+               (select org_short_name from t_bdmp_sys_org where org_id = org.parent_id) parentName,
+               (select count(*) from t_bdmp_sys_org o where o.parent_id = org.org_id ) as hasChild
+        from t_bdmp_sys_org org
+        <where>
+            <if test='null != ew.sqlSegment and "" != ew.sqlSegment'>
+                and ${ew.sqlSegment}
+            </if>
+        </where>
+    </select>
+
+    <select id="getCCPWayList" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.CCPWayVo">
+        select fac.waysection_id wayId,way.waysection_name wayName,temp.org_name orgName,temp.org_id orgId
+        from t_bdmp_assets_facilities fac
+        inner join(
+            select o1.org_id,o1.org_name,o2.org_id tollStationId from t_bdmp_sys_org o1
+            inner join t_bdmp_sys_org o2 on o2.parent_id = o1.org_id and o2.org_type = '000321'
+            where o1.org_id = #{orgId} or o1.parent_id = #{orgId}
+         ) temp on temp.tollStationId = fac.manage_id
+        inner join t_bdmp_assets_waysection way on way.waysection_id = fac.waysection_id
+        group by temp.org_id,fac.waysection_id
+    </select>
+
+    <select id="getCCPWayMapping" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.CCPWayVo">
+        select id,org_id,org_name,waysection_id way_id,waysection_name way_name
+        from t_bdmp_sys_way_mapping
+        where org_id in (
+            select org_id from t_bdmp_sys_org where org_id = #{orgId} or parent_id = #{orgId}
+        )
+    </select>
+
+</mapper>

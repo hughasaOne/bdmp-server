@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.fac.dao.FacDao">
+
+    <!--获取设施列表-->
+    <select id="getFacList" resultType="com.rhy.bdmp.open.modules.fac.domain.vo.BaseFacVo">
+        select fac.*,temp.*,dict.name as facTypeName from t_bdmp_assets_facilities fac
+        left join (
+            select org.org_id,org.org_name,way.waysection_id as wayId,way.waysection_name
+            from t_bdmp_assets_waysection way
+            inner join t_bdmp_sys_org org on way.manage_id = org.org_id
+        ) temp on temp.wayId = fac.waysection_id
+        left join t_bdmp_assets_dict dict on fac.facilities_type = dict.code
+        <where>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.assertPermissions"></include>
+            </if>
+
+            <if test="null != commonBo.nodeId and '' != commonBo.nodeId">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.getAssertByNode"></include>
+            </if>
+
+            <if test="null != commonBo.codes">
+                and facilities_type in
+                <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+
+            <if test="null != commonBo.search and '' != commonBo.search">
+                and facilities_id = #{commonBo.search}
+            </if>
+        </where>
+    </select>
+</mapper>

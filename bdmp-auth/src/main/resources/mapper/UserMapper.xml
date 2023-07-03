@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.auth.dao.UserDao">
+    <!--查询用户角色权限（根据用户ID,返回角色ID集合）-->
+    <select id="findRoleIdsByUserId" resultType="java.lang.String">
+        SELECT role_id FROM t_bdmp_sys_user_role
+        <where>
+            <if test="userId!=null and userId!=''">
+                user_id=#{userId}
+            </if>
+        </where>
+    </select>
+</mapper>

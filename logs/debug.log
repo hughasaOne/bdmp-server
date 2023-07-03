@@ -1,0 +1,172 @@
+2023-03-11 09:09:34.561 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 09:09:35.357 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:09:35.359 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:09:35.360 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:02.804 [http-nio-60055-exec-5] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 09:13:02.950 [http-nio-60055-exec-5] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:02.952 [http-nio-60055-exec-5] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:02.952 [http-nio-60055-exec-5] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:14.730 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 09:13:14.731 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:14.731 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 09:13:14.731 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:01:02.921 [http-nio-60055-exec-8] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:01:03.567 [http-nio-60055-exec-8] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:01:03.567 [http-nio-60055-exec-8] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:01:03.568 [http-nio-60055-exec-8] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:05:49.755 [http-nio-60055-exec-1] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:05:49.756 [http-nio-60055-exec-1] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:05:49.762 [http-nio-60055-exec-1] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:05:49.762 [http-nio-60055-exec-1] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:05:49.865 [http-nio-60055-exec-1] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:07:39.726 [http-nio-60055-exec-4] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:07:39.740 [http-nio-60055-exec-4] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:07:39.741 [http-nio-60055-exec-4] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:07:39.741 [http-nio-60055-exec-4] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:08:28.508 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:08:28.509 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:08:28.509 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:08:28.509 [http-nio-60055-exec-3] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:11:58.033 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:11:58.100 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:11:58.105 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:11:58.106 [http-nio-60055-exec-6] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:12:53.988 [http-nio-60055-exec-7] DEBUG c.jtkj.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [master]
+2023-03-11 11:12:53.989 [http-nio-60055-exec-7] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:12:53.989 [http-nio-60055-exec-7] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-11 11:12:53.989 [http-nio-60055-exec-7] DEBUG c.jtkj.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?

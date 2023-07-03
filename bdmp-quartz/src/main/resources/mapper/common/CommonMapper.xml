@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.quartz.modules.common.dao.CommonDao">
+    <select id="getUserPermissions" resultType="java.lang.String">
+        select userData.permissions_id permissionsId
+        from basedata.t_bdmp_sys_user_data userData
+                 inner join basedata.t_bdmp_sys_user user
+        on userData.user_id = user.user_id
+        where userData.user_id = #{userId}
+          and userData.data_type = 1
+    </select>
+
+    <select id="getCurentUser" resultType="com.rhy.bdmp.quartz.modules.common.to.UserAppPermissions">
+        select user_id,is_admin from basedata.t_bdmp_sys_user
+        where user_id = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DictDeviceDao">
+
+    <select id="getChildren" resultType="java.util.Map">
+        select b1.device_dict_id                            as deviceDictId,
+               b1.p_device_dict_id                          as pdeviceDictId,
+               b1.name,
+               b1.alias_name                                as aliasName,
+               b1.variety,
+               b1.unit,
+               b1.summary                                   as summary,
+               date_format(b1.update_time,'%Y-%m-%d %H:%i:%s') as updateTime,
+               (select name
+                from t_bdmp_assets_dict_device
+                where device_dict_id = b1.p_device_dict_id) as parentName,
+               if((select count(*) from t_bdmp_assets_dict_device where p_device_dict_id = b1.device_dict_id) > 0, true,
+                  false)                                    as hasChild
+        from t_bdmp_assets_dict_device b1
+        where b1.p_device_dict_id = #{parentId}
+    </select>
+
+    <select id="selectById" resultType="java.util.Map">
+        select b1.device_dict_id                            as deviceDictId,
+               b1.p_device_dict_id                          as pdeviceDictId,
+               b1.device_type_id                            as deviceTypeId,
+               b1.name,
+               b1.alias_name                                as aliasName,
+               b1.variety,
+               b1.unit,
+               b1.summary                                   as summary,
+               date_format(b1.update_time,'%Y-%m-%d %H:%i:%s') as updateTime,
+               (select name
+                from t_bdmp_assets_dict_device
+                where device_dict_id = b1.p_device_dict_id) as parentName,
+               b1.datastatusid
+        from t_bdmp_assets_dict_device b1
+        where b1.device_dict_id = #{deviceDictId}
+    </select>
+
+    <select id="getDictDevice" resultType="java.util.Map">
+        select b1.device_dict_id                            as deviceDictId,
+        b1.p_device_dict_id                          as pdeviceDictId,
+        b1.name,
+        b1.alias_name                                as aliasName,
+        b1.variety,
+        b1.unit,
+        b1.summary                                   as summary,
+        date_format(b1.update_time,'%Y-%m-%d %H:%i:%s')                            as updateTime,
+        (select name
+        from t_bdmp_assets_dict_device
+        where device_dict_id = b1.p_device_dict_id) as parentName,
+        if((select count(*) from t_bdmp_assets_dict_device where p_device_dict_id = b1.device_dict_id) > 0, true,
+        false)                                    as hasChild
+        from t_bdmp_assets_dict_device b1
+        <where>
+            <if test="dictBO.isDirectory">
+                and (p_device_dict_id is null or p_device_dict_id = '')
+            </if>
+            <if test="null != dictBO.parentId and '' != dictBO.parentId">
+                and p_device_dict_id = #{dictBO.parentId}
+            </if>
+            <if test="null != dictBO.name and '' != dictBO.name">
+                and name like concat('%',#{dictBO.name},'%')
+            </if>
+            <if test="null != dictBO.id and '' != dictBO.id">
+                and device_dict_id = #{dictBO.id}
+            </if>
+        </where>
+    </select>
+
+    <select id="getDictDeviceId" resultType="java.lang.String">
+        select case
+                   when (select dict_id from t_bdmp_assets_dict where dict_id = #{deviceTypeId}) is null
+                   then null
+                   when (select count(*) from t_bdmp_assets_dict_device where device_type_id = #{deviceTypeId}) > 0
+                   then (select min(device_dict_id + 1) from t_bdmp_assets_dict_device
+                            where (device_dict_id + 1) not in
+                                  (select device_dict_id from t_bdmp_assets_dict_device
+                                     where device_type_id = #{deviceTypeId})
+                            and device_type_id = #{deviceTypeId})
+                   else (select concat(code, '0001') from t_bdmp_assets_dict where dict_id = #{deviceTypeId})
+                end as id;
+    </select>
+
+    <select id="getMaxDeviceDictId" resultType="java.lang.String">
+        select concat(code,'9999') from t_bdmp_assets_dict where dict_id = #{deviceTypeId}
+    </select>
+</mapper>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.user.dao.UserDao">
+
+    <select id="findUserByUserId" resultType="com.rhy.bdmp.open.modules.user.domain.vo.UserVo">
+        select u.user_id userId,u.username,u.user_type userType,u.nick_name nickName,u.phone,u.org_id orgId,o.org_name orgName,o.org_short_name orgShortName,o.org_type orgType,
+               (select name from t_bdmp_assets_dict d where d.`code`=o.org_type limit 1) as orgTypeName,
+          o.description,u.user_config userConfig,post.name as post,
+          case u.post_level
+          when 1 then '高级管理'
+          when 2 then '中级管理'
+          when 3 then '一般管理'
+          when 4 then '一般员工'
+          else u.post_level
+        end as postLevel,
+          u.email,expired_time
+        from  t_bdmp_sys_user u left join t_bdmp_sys_org o on u.org_id=o.org_id
+        left join t_bdmp_assets_dict_post post on post.post_id = u.post
+        where user_id = #{userId}
+    </select>
+
+    <select id="getOrg" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Org">
+        SELECT
+            org_short_name,parent_id ,org_type
+        FROM
+            t_bdmp_sys_org
+        WHERE
+            org_id = #{orgId}
+    </select>
+
+    <!--根据username或id查询-->
+    <select id="getUser" resultType="com.rhy.bdmp.open.modules.user.domain.vo.UserVo">
+        select * from t_bdmp_sys_user
+        where user_id = #{account}
+        or username = #{account}
+    </select>
+
+    <select id="findAllUser" resultType="com.rhy.bdmp.open.modules.user.domain.vo.UserOrgRelationVo">
+        SELECT
+            user_id,
+            nick_name,
+            username,
+            org_id
+        FROM
+            t_bdmp_sys_user
+    </select>
+
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.user.domain.vo.OrgVo">
+        SELECT org.org_short_name,
+               org.parent_id,
+               org.org_type,
+               org.org_id,
+               parent.org_name       AS parentName,
+               parent.org_short_name AS parentShortName
+        FROM t_bdmp_sys_org org
+                 INNER JOIN t_bdmp_sys_org parent ON org.parent_id = parent.org_id
+    </select>
+
+    <!--根据机构获取用户-->
+    <select id="getUserByOrg" resultType="com.rhy.bdmp.open.modules.user.domain.vo.UserVo">
+        select  user.user_id userId,
+                user.username,
+                user.user_type userType,
+                user.nick_name nickName,
+                user.phone,
+                user.org_id orgId,
+                org.org_name orgName,
+                org.org_short_name orgShortName,
+                org.org_code orgCode,
+                org.org_type orgType,
+                (select name from t_bdmp_assets_dict where code = org.org_type) orgTypeName,
+                org.description,
+                user.user_config userConfig,
+                (select name from t_bdmp_assets_dict_post where post_id = user.post) post,
+                case user.post_level
+                when 1 then '高级管理'
+                when 2 then '中级管理'
+                when 3 then '一般管理'
+                when 4 then '一般员工'
+                else user.post_level
+                end as postLevel,
+                user.email,
+                user.expired_time expiredTime
+        from t_bdmp_sys_user user
+        left join t_bdmp_sys_org org on user.org_id = org.org_id
+        where user.org_id in
+        <foreach collection="orgIds" item="orgId" open="(" separator="," close=")">
+            #{orgId}
+        </foreach>
+    </select>
+
+    <select id="getOrgChildrenIds" resultType="java.lang.String">
+        select org_id
+        from t_bdmp_sys_org
+        where parent_id in
+        <foreach collection="orgIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

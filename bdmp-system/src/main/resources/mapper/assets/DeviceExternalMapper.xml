@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DeviceExternalDao">
+    <delete id="delete">
+        delete from t_bdmp_assets_device_external where device_id = #{deviceId} and external_id in
+        <foreach collection="externalIds" item="externalId" open="(" separator="," close=")">
+            #{externalId}
+        </foreach>
+    </delete>
+
+    <select id="list" resultType="java.util.Map">
+        select device_id   as deviceId,
+               device_name as deviceName,
+               device_type as deviceType,
+               device_code as deviceCode,
+               seria_number as seriaNumber,
+               system_id as systemId,
+               (select system_name from t_bdmp_assets_dict_system where system_id = device.system_id) as systemName,
+               device_id as externalId
+        from t_bdmp_assets_device device
+        where device_id in (
+            select external_id from t_bdmp_assets_device_external where device_id = #{deviceId}
+        )
+    </select>
+</mapper>

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.AssetsDao">
+
+    <!-- 获取机构列表 -->
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Org">
+        select * from t_bdmp_sys_org org where org.org_type = '000300'
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and org.org_id in (
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and org.org_id in (
+                    select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                        select permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                    )
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and org.org_id in (
+                    select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                        select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id in (
+                            select b.permissions_id from t_bdmp_sys_user_data b where user_id=#{userId} and data_type='2'
+                        )
+                    )
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and org.parent_id = #{orgId}
+        </if>
+        <if test=" 'org' == nodeType">
+            and org.org_id = #{orgId}
+        </if>
+        <if test=" 'way' == nodeType">
+            and org.org_id in (
+                select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id = #{orgId}
+            )
+        </if>
+        <if test=" 'fac' == nodeType">
+            and org.org_id in (
+                select way.manage_id from t_bdmp_assets_waysection way where way.waysection_id in (
+                    select fac.waysection_id from t_bdmp_assets_facilities fac where fac.facilities_id = #{orgId}
+                )
+            )
+        </if>
+    </select>
+
+    <!-- 获取最上级系统字典 -->
+    <select id="getSuperiorSystemDict" resultType="com.rhy.bdmp.open.modules.assets.domain.po.DictSystem">
+        select * from t_bdmp_assets_dict_system where parent_id is null;
+    </select>
+
+    <!-- 根据pid查找系统字典 -->
+    <select id="listByPid" resultType="com.rhy.bdmp.open.modules.assets.domain.po.DictSystem">
+        select * from t_bdmp_assets_dict_system where parent_id = #{parentId}
+    </select>
+
+    <!-- 根据系统id列表查找子系统 -->
+    <select id="listBySystemIds" resultType="com.rhy.bdmp.open.modules.assets.domain.po.DictSystem">
+        select * from t_bdmp_assets_dict_system
+        <where>
+            parent_id IN
+            <foreach item="systemId" index="index" collection="systemIds" separator="," open="(" close=")">
+                <trim>
+                    #{systemId}
+                </trim>
+            </foreach>
+        </where>
+    </select>
+
+    <!-- 获取机构介绍信息 -->
+    <select id="getOrgIntroduce" resultType="java.util.HashMap" >
+        select
+            org_id as orgId,
+            (select total_employees_num from t_bdmp_sys_employees_stat where org_id=#{orgId}) as employeeNum,
+            description as description
+        from t_bdmp_sys_org_introduce
+        where org_id = #{orgId}
+    </select>
+
+    <!-- 获取机构设施统计信息 -->
+    <select id="getFacStatByOrg" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.FacilitiesStatBo">
+        select id,name,
+            sum( case when facilitiestype = '32330200' then total else 0 end ) as tollstationNum,
+            sum( case when facilitiestype = '32330700' then total else 0 end ) as doorFrameNum,
+            sum( case when facilitiestype = '32330600' then total else 0 end ) as bridgeNum,
+            sum( case when facilitiestype = '32330400' then total else 0 end ) as tunnelNum,
+            sum( case when facilitiestype = '32330800' then total else 0 end ) as serviceareaNum
+            from (
+                select way.manage_id as id, max( org.org_name ) as name, fac.facilities_type as facilitiestype, count(*) as total
+                from
+                  t_bdmp_assets_waysection way
+                left join (
+                    select
+                        waysection_id, facilities_id,
+                        ( case when ( 0 &lt; locate( '323307', facilities_type )) then '32330700' else facilities_type end ) as facilities_type,
+                        facilities_id_old as originid
+                    from
+                      t_bdmp_assets_facilities
+                    where
+                      facilities_type in ( '32330200', '32330400', '32330700', '32330711', '32330712', '32330800' )
+                    union all
+                    select operating_waysection_id as waysection_id, facilities_id, '32330600' as facilities_type, id_old as originid
+                    from t_bdmp_assets_facilities_bridge where bridge_id in( select max(bridge_id) as bridge_id from t_bdmp_assets_facilities_bridge where bridge_name not like '%右幅%' group by operating_waysection_id,facilities_id,bridge_name )
+                ) fac on way.waysection_id = fac.waysection_id
+                left join t_bdmp_sys_org org on way.manage_id = org.org_id
+                where
+                    facilities_type is not null and facilities_type != '' group by way.manage_id, fac.facilities_type
+            ) stat
+        group by id, name
+        having 1=1
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and id in ( select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and 1=2
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and 1=2
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and id in (select org_id from t_bdmp_sys_org org where org.org_type = '000300' and parent_id = #{orgId})
+        </if>
+        <if test=" 'org' == nodeType">
+            and id = #{orgId}
+        </if>
+        <if test=" 'way' == nodeType">
+            and 1=2
+        </if>
+        <if test=" 'fac' == nodeType">
+            and 1=2
+        </if>
+        <if test=" null != name and '' != name ">
+            and name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <!-- 获取运营公司里程列表 -->
+    <select id="queryMileageListByOrg" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.MileageBo">
+        select org.org_id as id,org.org_name as name,org.org_short_name as shortName,org.node_id as nodeId,'1' as nodeType,stat.mileage as mileage from(
+            select way.manage_id as id, ROUND(sum(way.mileage),4) as mileage from t_bdmp_assets_waysection way
+            <where>
+                <if test="isUseUserPermissions">
+                    <if test="1 == dataPermissionsLevel">
+                        and way.manage_id in(
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and 1=2
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and 1=2
+                    </if>
+                </if>
+            </where>
+            group by way.manage_id
+        ) stat left join t_bdmp_sys_org org on stat.id=org.org_id order by stat.mileage desc
+    </select>
+
+    <!-- 机构人员统计 -->
+    <select id="employeesStat" resultType="map">
+        SELECT
+            org.org_id as id,
+            org.org_name as name,
+            org.org_short_name as shortName,
+            org.org_type as orgType,
+            stat.total_employees_num as totalEmployeesNum,
+            stat.middle_manage_num as middleManageNum,
+            stat.general_manage_num as generalManageNum,
+            stat.general_employees_num as generalEmployeesNum
+        FROM
+          t_bdmp_sys_org org
+        LEFT JOIN t_bdmp_sys_employees_stat stat ON org.org_id = stat.org_id
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and org.org_id in(
+                      select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and 1=2
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and 1=2
+                </if>
+            </if>
+            <choose>
+                <when test=" 'group' == nodeType">
+                    and (org.org_id=#{orgId} or org.org_type = '000300')
+                    order by org.sort asc
+                </when>
+                <when test=" 'org' == nodeType">
+                    and (org.org_id=#{orgId})
+                </when>
+                <otherwise>
+                    and 1=2
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+</mapper>

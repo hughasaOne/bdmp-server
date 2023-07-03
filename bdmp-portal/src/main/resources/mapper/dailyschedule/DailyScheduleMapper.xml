@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.portal.modules.daylischedule.dao.DailyScheduleDao">
+
+
+    <select id="findByScheduleDate" resultType="com.rhy.bdmp.base.modules.sys.domain.po.DailySchedule">
+        SELECT daily_schedule_id, user_id, schedule_date, title, description, create_by, create_time, update_by, update_time
+        FROM t_portal_daily_schedule
+        where  user_id=#{userId} and DATE_FORMAT(schedule_date,'%Y-%m-%d')=DATE_FORMAT(#{scheduleDate},'%Y-%m-%d')
+        order by schedule_date
+    </select>
+
+</mapper>

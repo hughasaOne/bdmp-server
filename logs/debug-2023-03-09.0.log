@@ -1,0 +1,99 @@
+2023-03-09 08:36:04.578 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 08:36:05.237 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-09 08:36:05.242 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-09 08:36:05.242 [http-nio-60005-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: select ROUND(sum(way.mileage),4) as totalMileage,count(*) as wayNum from t_bdmp_assets_waysection way
+2023-03-09 10:50:34.315 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 10:50:34.764 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 10:50:34.769 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 10:50:34.769 [http-nio-60005-exec-2] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:08:53.979 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 11:08:54.663 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:08:54.670 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:08:54.671 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:10:52.748 [http-nio-60055-exec-3] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 11:10:52.790 [http-nio-60055-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:10:52.791 [http-nio-60055-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:10:52.791 [http-nio-60055-exec-3] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:18:40.982 [http-nio-60055-exec-6] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 11:18:40.996 [http-nio-60055-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:18:40.997 [http-nio-60055-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:18:40.997 [http-nio-60055-exec-6] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:44:59.717 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.datasources.core.DynamicDataSource - 使用数据源 [bdmp_public]
+2023-03-09 11:45:00.596 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 原始 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:45:00.600 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入租户ID，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?
+2023-03-09 11:45:00.600 [http-nio-60055-exec-1] DEBUG c.ovit.cloud.db.tenant.core.MultiTenantInterceptor - 注入权限判断，委托 SQL: SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = ?

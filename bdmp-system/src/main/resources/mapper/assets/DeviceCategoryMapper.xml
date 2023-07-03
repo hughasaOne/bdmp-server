@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DeviceCategoryDao">
+
+    <select id="getCategoryItemNode" resultType="java.util.Map">
+        select d1.dict_id as id,
+               d1.name,d1.code,'0' as parentId,
+               if((d1.sort is null or d1.sort = ''),0,d1.sort) as sort,
+               d1.code as `value`,
+               'deviceType' as nodeType
+        from t_bdmp_assets_dict d1,t_bdmp_assets_dict d2
+        where d1.parent_id = d2.dict_id and d2.code = '13XXXX' and d1.datastatusid = 1
+        union
+        select deviceDict.device_dict_id as id,
+               deviceDict.name,
+               dict.code as code,
+               deviceDict.device_type_id as parentId,
+               if((deviceDict.sort is null or deviceDict.sort = ''),0,deviceDict.sort) as sort,
+               deviceDict.device_dict_id as `value`,
+               'deviceDict' as nodeType
+        from t_bdmp_assets_dict_device deviceDict,t_bdmp_assets_dict dict
+        where deviceDict.device_type_id = dict.dict_id
+        and deviceDict.datastatusid = 1
+    </select>
+    
+    <select id="getDeviceType" resultType="java.util.Map">
+        select dict_id as id,name,code,code as value,'' as parentId,code as dictCode,
+              false as hasChildren,
+             'deviceType' as nodeType
+        from t_bdmp_assets_dict dict
+        where code in 
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+        order by sort
+    </select>
+
+    <select id="getDeviceDict" resultType="java.util.Map">
+        select dict_id as id,name,code,code as value,'' as parentId,code as dictCode,
+        true as hasChildren,
+        'deviceType' as nodeType
+        from t_bdmp_assets_dict dict
+        where dict_id in (
+            select device_type_id from t_bdmp_assets_dict_device where device_dict_id in
+            <foreach collection="codes" item="code" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+        )
+        union all
+        select device_dict_id as id,name,device_type_id as code,
+               (select code from t_bdmp_assets_dict where dict_id = dictDevice.device_type_id) as value,
+                dictDevice.device_type_id as parentId,
+                device_dict_id as dictCode,
+                false as hasChildren,
+                'deviceDict' as nodeType
+        from t_bdmp_assets_dict_device dictDevice
+        where device_dict_id in
+        <foreach collection="codes" item="code" open="(" separator="," close=")">
+            #{code}
+        </foreach>
+    </select>
+
+    <select id="getDevice" resultType="java.util.Map">
+        select device.device_id as deviceId,device_name as deviceName,device_type as deviceType,
+               (select name from t_bdmp_assets_dict where code = device.device_type) deviceTypeName,
+               system.system_id as systemId,system_name as systemName,false as checked
+        from t_bdmp_assets_device device
+        left join t_bdmp_assets_dict_system system on device.system_id = system.system_id
+        inner join t_bdmp_assets_waysection way on device.waysection_id = way.waysection_id
+        <where>
+            <if test="1 == categoryType">
+                and device_type in
+                <foreach collection="codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+            <if test="2 == categoryType">
+                and device_dict_id in
+                <foreach collection="codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+
+            <if test="null != deviceBo.deviceName and deviceBo.deviceName != ''">
+                and device_name like concat('%',#{deviceBo.deviceName},'%')
+            </if>
+
+            <if test="null != deviceBo.deviceType and deviceBo.deviceType != ''">
+                and device_type = #{deviceBo.deviceType}
+            </if>
+
+            <if test="null != deviceBo.systemId and deviceBo.systemId != ''">
+                and device.system_id = #{deviceBo.systemId}
+            </if>
+
+            <if test="null != deviceBo.nodeType">
+                <if test="deviceBo.nodeType == 0">
+                    and way.manage_id in (select org_id from t_bdmp_sys_org where parent_id = #{deviceBo.nodeId})
+                    and way.waysection_id = device.waysection_id
+                </if>
+
+                <if test="deviceBo.nodeType == 1">
+                    and way.manage_id = #{deviceBo.nodeId}
+                    and way.waysection_id = device.waysection_id
+                </if>
+                <if test="deviceBo.nodeType == 2">
+                    and way.waysection_id = #{deviceBo.nodeId}
+                </if>
+                <if test="deviceBo.nodeType == 3">
+                    and device.facilities_id = #{deviceBo.nodeId}
+                </if>
+            </if>
+        </where>
+        order by device.device_type,device.sort,device.device_id
+    </select>
+
+    <select id="getDeviceByCodes" resultType="java.util.Map">
+        select device.device_id as deviceId,device_name as deviceName,device_type as deviceType,
+               (select name from t_bdmp_assets_dict where code = device.device_type) deviceTypeName,
+               system.system_id as systemId,system_name as systemName
+        from t_bdmp_assets_device device,t_bdmp_assets_waysection way,t_bdmp_assets_dict_system system
+        <where>
+            and device.waysection_id = way.waysection_id
+            and device.system_id = system.system_id
+            and device.device_id in
+            <foreach collection="codes" item="code" open="(" separator="," close=")">
+                #{code}
+            </foreach>
+        </where>
+    </select>
+</mapper>

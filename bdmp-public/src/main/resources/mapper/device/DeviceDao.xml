@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.device.dao.DeviceDao">
+
+    <sql id="deviceField">
+        device.device_id,
+        device.device_dict_id,
+        device.sort_id,
+        device.device_name,
+        device.device_alias,
+        device.begin_stake_no,
+        device.end_stake_no,
+        device.username,
+        device.password,
+        device.device_code,
+        device.device_type,
+        device.device_type_sub,
+        device.facilities_id,
+        device.waysection_id,
+        device.device_mileage,
+        device.device_conn,
+        device.location,
+        device.direction,
+        device.system_id,
+        device.is_tunnel,
+        device.in_gateway_addr,
+        device.out_gateway_addr,
+        device.subnet_mask,
+        device.ip,
+        device.port,
+        device.cmd_delay,
+        device.top_distance,
+        device.left_distance,
+        device.position_x,
+        device.position_y,
+        device.longitude,
+        device.latitude,
+        device.center_off_no,
+        device.qr_code_url,
+        device.device_model,
+        device.device_power,
+        device.linkage,
+        device.seria_number,
+        device.specifications,
+        device.variety,
+        device.weight,
+        device.unit,
+        device.brand_id,
+        device.brand_name,
+        device.material,
+        device.gpd,
+        device.optical_cable,
+        device.layout_model,
+        device.service_year,
+        device.device_id_old,
+        device.device_id_source,
+        device.property_right_unit_id,
+        device.manage_unit_id,
+        device.manage_department_id,
+        device.zr_department_id,
+        device.use_department_id,
+        device.zr_user_id,
+        device.zr_user_name,
+        device.use_user_id,
+        device.use_user_name,
+        device.assets_no,
+        device.assets_source,
+        device.maintain_no,
+        device.old_manage_status,
+        device.manage_status,
+        device.old_work_status,
+        device.work_status,
+        device.record_date,
+        device.start_use_date,
+        device.install_date,
+        device.step,
+        device.use_year,
+        device.supplier_id,
+        device.supplier,
+        device.manufacturer_id,
+        device.manufacturer,
+        device.made_country,
+        device.factory_number,
+        device.factory_no,
+        device.factory_date,
+        device.effective_start_date,
+        device.effective_end_date,
+        device.drawing_number,
+        device.pic,
+        device.operating_system,
+        device.databasess,
+        device.is_new_obj,
+        device.purchase_dept_id,
+        device.purchase_dept_name,
+        device.purchase_user_id,
+        device.purchase_user_name,
+        device.check_date,
+        device.invoice_no,
+        device.supplier_contact,
+        device.supplier_contact_no,
+        device.check_situation,
+        device.exist_spare,
+        device.contract_no,
+        device.protocol_apply_scope,
+        device.remark,
+        device.data_collect_type,
+        device.display_ratio,
+        device.display_color,
+        device.lane_num,
+        if((device.sort is null or device.sort = ''),0,device.sort) sort,
+        device.datastatusid,
+        device.mac,
+        device.create_time,
+        device.update_time,
+        device.direction_desc,
+        device.center_off_no_k,
+        device.center_off_no_m
+    </sql>
+
+    <!--统计每个设备类型的总数-->
+    <select id="statDeviceNumByType" resultType="com.rhy.bdmp.open.modules.device.domain.vo.StatDeviceNumByTypeVo">
+        select dict.name,dict.code,if((device.num is null or device.num = ''),0,device.num) as num from(
+        select device_type, count(*) num from t_bdmp_assets_device
+        <where>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.assertPermissions"></include>
+            </if>
+            <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.getAssertByNode"></include>
+        </where>
+        group by device_type
+        order by sort asc, create_time desc
+        ) device
+        right join t_bdmp_assets_dict dict on dict.code = device.device_type
+        <where>
+            <if test="null != commonBo.codes">
+                <if test="null != commonBo.categoryType and commonBo.categoryType == 1">
+                    and dict.code in
+                    <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                </if>
+
+                <if test="null != commonBo.categoryType and commonBo.categoryType == 2">
+                    and dict.dict_id in
+                    (
+                    select device_type_id from t_bdmp_assets_dict_device where device_dict_id in
+                    <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                    )
+                </if>
+            </if>
+            <if test="null == commonBo.codes">
+                and dict.parent_id in (
+                select dict_id from t_bdmp_assets_dict where code = "13XXXX"
+                )
+            </if>
+        </where>
+    </select>
+
+    <!--询设备列表-->
+    <select id="getDeviceList" resultType="com.rhy.bdmp.open.modules.device.domain.vo.DeviceVo">
+        select * from (
+            select
+            <include refid="deviceField"></include>,
+            dict.name deviceTypeName,
+            (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id ) deviceDictName,
+            (select point_position from t_bdmp_assets_device_fire_alarm fa where device.device_id = fa.device_id ) pointPosition,
+            system.system_name as systemName,
+            temp.facilities_name as facilitiesName,
+            temp.waysection_name as waysectionName,
+            temp.org_id as orgId,
+            temp.org_name as orgName,
+            temp.org_short_name as orgShortName,
+            case when #{commonBo.longitude} is null then null
+            else
+            ROUND(st_distance_sphere(POINT(if(longitude>180,0, longitude),if(latitude>90, 0,latitude)),
+            POINT(#{commonBo.longitude},#{commonBo.latitude})),4)
+            end AS distance
+            from t_bdmp_assets_device device
+            left join t_bdmp_assets_dict dict on device_type = dict.code
+            left join t_bdmp_assets_dict_system system on device.system_id = system.system_id
+            left join (
+            select org.org_id,org.org_name,org.org_short_name,way.waysection_id as wayId,way.waysection_name,fac.facilities_name,fac.facilities_id facId
+            from t_bdmp_assets_waysection way
+            inner join t_bdmp_sys_org org on way.manage_id = org.org_id
+            inner join t_bdmp_assets_facilities fac on fac.waysection_id = way.waysection_id
+            ) temp on temp.facId = device.facilities_id
+            <where>
+                <if test="null == commonBo.categoryType or 1 == commonBo.categoryType">
+                    <if test="null != commonBo.codes">
+                        and  device_type in
+                        <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                            #{code}
+                        </foreach>
+                    </if>
+                </if>
+                <if test="null != commonBo.categoryType and 2 == commonBo.categoryType">
+                    <if test="null != commonBo.codes">
+                        and  device_dict_id in
+                        <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                            #{code}
+                        </foreach>
+                    </if>
+                </if>
+                <if test="null != commonBo.categoryType and 3 == commonBo.categoryType">
+                    <if test="null != commonBo.codes">
+                        and  device.device_id in
+                        <foreach collection="commonBo.codes" item="code" open="(" separator="," close=")">
+                            #{code}
+                        </foreach>
+                    </if>
+                </if>
+
+                <if test="userPermissions.isUseUserPermissions">
+                    <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.assertPermissions"></include>
+                </if>
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.getAssertByNode"></include>
+
+                <if test="null != commonBo.systemIds">
+                    and device.system_id in
+                    <foreach collection="commonBo.systemIds" item="systemId" open="(" separator="," close=")">
+                        #{systemId}
+                    </foreach>
+                </if>
+
+                <if test="null != commonBo.search and commonBo.search != ''">
+                    and (device.device_id = #{commonBo.search}
+                    or device.device_name like concat('%',#{commonBo.search},'%')
+                    or device.direction = #{commonBo.search}
+                    or device.center_off_no like concat('%',#{commonBo.search},'%')
+                    or device.device_type in (select code from t_bdmp_assets_dict where name like concat('%',#{commonBo.search},'%')))
+                </if>
+
+                <if test="null != commonBo.laneNum">
+                    and device.lane_num = #{commonBo.laneNum}
+                </if>
+
+                <if test="null != commonBo.deviceIds and commonBo.deviceIds.size() > 0">
+                    and device.device_id in
+                    <foreach collection="commonBo.deviceIds" item="deviceId" open="(" separator="," close=")">
+                        #{deviceId}
+                    </foreach>
+                </if>
+
+                <if test="null != commonBo.sns and commonBo.sns.size() > 0">
+                    and device.seria_number in
+                    <foreach collection="commonBo.sns" item="sn" open="(" separator="," close=")">
+                        #{sn}
+                    </foreach>
+                </if>
+
+                <if test="null != commonBo.direction and commonBo.direction != ''">
+                    and device.direction = #{commonBo.direction}
+                </if>
+
+                <if test="null != commonBo.beginPile and null != commonBo.endPile">
+                    and (center_off_no_k+(center_off_no_m/1000)) between #{commonBo.beginPile} and #{commonBo.endPile}
+                </if>
+                <if test="null != commonBo.beginPile and null == commonBo.endPile">
+                    and (center_off_no_k+(center_off_no_m/1000)) &gt;= #{commonBo.beginPile}
+                </if>
+                <if test="null == commonBo.beginPile and null != commonBo.endPile">
+                    and (center_off_no_k+(center_off_no_m/1000)) &lt;= #{commonBo.endPile}
+                </if>
+            </where>
+        ) device
+        <where>
+            <if test="null != commonBo.longitude">
+                and distance is not null
+                <if test="null != commonBo.range">
+                    and distance &lt; #{commonBo.range}
+                </if>
+            </if>
+        </where>
+
+        <choose>
+            <when test="null != commonBo.longitude">
+                order by distance asc,device.sort asc, device.create_time desc,device.device_id
+                <if test="null != commonBo.limit">
+                    limit #{commonBo.limit}
+                </if>
+            </when>
+            <when test="null != commonBo.beginPile or null != commonBo.endPile">
+                order by (center_off_no_k+(center_off_no_m/1000)) asc,device.sort asc, device.create_time desc,device.device_id
+            </when>
+            <otherwise>
+                order by device.sort asc, device.create_time desc,device.device_id
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getDeviceDetail" resultType="com.rhy.bdmp.open.modules.device.domain.vo.DeviceVo">
+        select
+        <include refid="deviceField"></include>,
+        dict.name deviceTypeName,
+        (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id ) deviceDictName,
+        (select point_position from t_bdmp_assets_device_fire_alarm fa where device.device_id = fa.device_id ) pointPosition,
+        system.system_name as systemName,
+        temp.facilities_name as facilitiesName,
+        temp.waysection_name as waysectionName,
+        temp.org_id as orgId,
+        temp.org_name as orgName,
+        temp.org_short_name as orgShortName
+        from t_bdmp_assets_device device
+        left join t_bdmp_assets_dict dict on device.device_type = dict.code
+        left join t_bdmp_assets_dict_system system on device.system_id = system.system_id
+        left join (
+            select org.org_id,org.org_name,org.org_short_name,way.waysection_id as wayId,way.waysection_name,fac.facilities_name,fac.facilities_id facId
+            from t_bdmp_assets_waysection way
+            inner join t_bdmp_sys_org org on way.manage_id = org.org_id
+            inner join t_bdmp_assets_facilities fac on fac.waysection_id = way.waysection_id
+        ) temp on temp.facId = device.facilities_id
+        <where>
+            and device.device_id = #{deviceDetailBo.deviceId}
+        </where>
+    </select>
+
+    <select id="getAllNode" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        <choose>
+            <when test="null != nodeType and '' != nodeType">
+                <if test="'group' == nodeType">
+                    <if test="null != wayIds and wayIds.size > 0">
+                        select org_id as id,'org' as nodeType,org_name as name,org_short_name as shortName,'0' as parentId,org_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_sys_org
+                        where parent_id = (
+                        select parent_id
+                        from t_bdmp_sys_org
+                        where org_id in (
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in
+                        <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                            #{wayId}
+                        </foreach>
+                        )
+                        limit 1
+                        )
+                        union all
+                        select org_id as id,'org' as nodeType,org_name as name,org_short_name as shortName,parent_id,org_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_sys_org
+                        where org_id in (
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in
+                        <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                            #{wayId}
+                        </foreach>
+                        )
+                        union all
+                        select waysection_id as id,'way' as nodeType,waysection_name as name,waysection_s_name as shortName,manage_id as parentId,'' as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_waysection
+                        where waysection_id in
+                        <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                            #{wayId}
+                        </foreach>
+                        union all
+                    </if>
+
+                    <if test="null != facIds and facIds.size > 0">
+                        select facilities_id as id,'fac' as nodeType,facilities_name as name,facilities_name as shortName,waysection_id as parentId,facilities_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_facilities
+                        where facilities_id in
+                        <foreach collection="facIds" item="facId" open="(" separator="," close=")">
+                            #{facId}
+                        </foreach>
+                        union all
+                    </if>
+
+                    <if test="null != deviceTypes and deviceTypes.size() > 0">
+                        select dict_id as id,'deviceType' as nodeType,name as name,name as shortName,'' as parentId,code as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_dict
+                        where code in
+                        <foreach collection="deviceTypes" item="deviceType" open="(" separator="," close=")">
+                            #{deviceType}
+                        </foreach>
+                        and datastatusid = 1
+                    </if>
+                </if>
+
+                <if test="'org' == nodeType">
+                    select org_id as id,'org' as nodeType,org_name as name,org_short_name as shortName,'0' as parentId,org_type as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_sys_org
+                    where org_id in (
+                    select manage_id from t_bdmp_assets_waysection where waysection_id in
+                    <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                        #{wayId}
+                    </foreach>
+                    )
+                    union all
+                    select waysection_id as id,'way' as nodeType,waysection_name as name,waysection_s_name as shortName,manage_id as parentId,'' as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_assets_waysection
+                    where waysection_id in
+                    <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                        #{wayId}
+                    </foreach>
+                    union all
+                    <if test="null != facIds and facIds.size > 0">
+                        select facilities_id as id,'fac' as nodeType,facilities_name as name,facilities_name as shortName,waysection_id as parentId,facilities_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_facilities
+                        where facilities_id in
+                        <foreach collection="facIds" item="facId" open="(" separator="," close=")">
+                            #{facId}
+                        </foreach>
+                        union all
+                    </if>
+
+                    <if test="null != deviceTypes and deviceTypes.size() > 0">
+                        select dict_id as id,'deviceType' as nodeType,name as name,name as shortName,'' as parentId,code as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_dict
+                        where code in
+                        <foreach collection="deviceTypes" item="deviceType" open="(" separator="," close=")">
+                            #{deviceType}
+                        </foreach>
+                        and datastatusid = 1
+                    </if>
+                </if>
+
+                <if test="'way' == nodeType">
+                    select waysection_id as id,'way' as nodeType,waysection_name as name,waysection_s_name as shortName,'0' as parentId,'' as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_assets_waysection
+                    where waysection_id in
+                    <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                        #{wayId}
+                    </foreach>
+                    union all
+                    <if test="null != facIds and facIds.size > 0">
+                        select facilities_id as id,'fac' as nodeType,facilities_name as name,facilities_name as shortName,waysection_id as parentId,facilities_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_facilities
+                        where facilities_id in
+                        <foreach collection="facIds" item="facId" open="(" separator="," close=")">
+                            #{facId}
+                        </foreach>
+                        union all
+                    </if>
+
+                    <if test="null != deviceTypes and deviceTypes.size() > 0">
+                        select dict_id as id,'deviceType' as nodeType,name as name,name as shortName,'' as parentId,code as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_dict
+                        where code in
+                        <foreach collection="deviceTypes" item="deviceType" open="(" separator="," close=")">
+                            #{deviceType}
+                        </foreach>
+                        and datastatusid = 1
+                    </if>
+                </if>
+
+                <if test="'fac' == nodeType">
+                    <if test="null != facIds and facIds.size > 0">
+                        select facilities_id as id,'fac' as nodeType,facilities_name as name,facilities_name as shortName,'0' as parentId,facilities_type as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_facilities
+                        where facilities_id in
+                        <foreach collection="facIds" item="facId" open="(" separator="," close=")">
+                            #{facId}
+                        </foreach>
+                        union all
+                    </if>
+
+                    <if test="null != deviceTypes and deviceTypes.size() > 0">
+                        select dict_id as id,'deviceType' as nodeType,name as name,name as shortName,'' as parentId,code as type,if((sort is null or sort = ''),0,sort) as sort
+                        from t_bdmp_assets_dict
+                        where code in
+                        <foreach collection="deviceTypes" item="deviceType" open="(" separator="," close=")">
+                            #{deviceType}
+                        </foreach>
+                        and datastatusid = 1
+                    </if>
+                </if>
+            </when>
+            <otherwise>
+                <if test="null != wayIds and wayIds.size > 0">
+                    select org_id as id,'org' as nodeType,org_name as name,org_short_name as shortName,'0' as parentId,org_type as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_sys_org
+                    where parent_id in (
+                        select parent_id
+                        from t_bdmp_sys_org
+                        where org_id in (
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in
+                        <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                            #{wayId}
+                        </foreach>
+                        )
+                    )
+                    union all
+                    select org_id as id,'org' as nodeType,org_name as name,org_short_name as shortName,parent_id,org_type as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_sys_org
+                    where org_id in (
+                        select manage_id from t_bdmp_assets_waysection where waysection_id in
+                        <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                            #{wayId}
+                        </foreach>
+                    )
+                    union all
+                    select waysection_id as id,'way' as nodeType,waysection_name as name,waysection_s_name as shortName,manage_id as parentId,'' as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_assets_waysection
+                    where waysection_id in
+                    <foreach collection="wayIds" item="wayId" open="(" separator="," close=")">
+                        #{wayId}
+                    </foreach>
+                    union all
+                </if>
+
+                <if test="null != facIds and facIds.size > 0">
+                    select facilities_id as id,'fac' as nodeType,facilities_name as name,facilities_name as shortName,waysection_id as parentId,facilities_type as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_assets_facilities
+                    where facilities_id in
+                    <foreach collection="facIds" item="facId" open="(" separator="," close=")">
+                        #{facId}
+                    </foreach>
+                    union all
+                </if>
+
+                <if test="null != deviceTypes and deviceTypes.size() > 0">
+                    select dict_id as id,'deviceType' as nodeType,name as name,name as shortName,'' as parentId,code as type,if((sort is null or sort = ''),0,sort) as sort
+                    from t_bdmp_assets_dict
+                    where code in
+                    <foreach collection="deviceTypes" item="deviceType" open="(" separator="," close=")">
+                        #{deviceType}
+                    </foreach>
+                    and datastatusid = 1
+                </if>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getInformationBoardDetail"
+            resultType="com.rhy.bdmp.open.modules.device.domain.vo.InformationBoardVo">
+        select * from t_bdmp_assets_device_intelligenceboard where device_id = #{deviceDetailBo.deviceId}
+    </select>
+
+    <select id="belongToDevice" resultType="com.rhy.bdmp.open.modules.device.domain.vo.DeviceVo">
+        select <include refid="deviceField"></include>
+        from t_bdmp_assets_device device
+        where device_id = (
+            select device_id from t_bdmp_assets_device_external where external_id = #{deviceId} limit 1
+        )
+    </select>
+</mapper>

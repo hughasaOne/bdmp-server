@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DictBrandDao">
+
+    <select id="selectMaps" resultType="java.util.Map">
+        select b1.brand_id                                                                                        as brandId,
+               b1.brand_no                                                                                        as brandNo,
+               b1.brand_name                                                                                      as brandName,
+               b1.parent_id                                                                                       as parentId,
+               (select brand_name
+                from t_bdmp_assets_dict_brand
+                where brand_id = b1.parent_id)                                                                     as parentName,
+               b1.sort,
+               if((select count(*) from t_bdmp_assets_dict_brand where parent_id = b1.brand_id) > 0, true,
+                  false)                                                                                          as hasChild
+        from t_bdmp_assets_dict_brand b1
+        where b1.parent_id = #{parentId}
+    </select>
+    <select id="selectById" resultType="java.util.Map">
+        select b1.brand_id                                                                                        as brandId,
+               b1.brand_no                                                                                        as brandNo,
+               b1.brand_name                                                                                      as brandName,
+               b1.parent_id                                                                                       as parentId,
+               (select brand_name
+                from t_bdmp_assets_dict_brand
+                where brand_id = b1.parent_id)                                                                     as parentName,
+               b1.sort
+        from t_bdmp_assets_dict_brand b1
+        where b1.brand_id = #{brandId}
+    </select>
+
+    <select id="getDictBrand" resultType="java.util.Map">
+        select b1.brand_id                                                                                        as brandId,
+        b1.brand_no                                                                                        as brandNo,
+        b1.brand_name                                                                                      as brandName,
+        b1.parent_id                                                                                       as parentId,
+        (select brand_name
+        from t_bdmp_assets_dict_brand
+        where brand_id = b1.parent_id)                                                                     as parentName,
+        b1.sort,
+        if((select count(*) from t_bdmp_assets_dict_brand where parent_id = b1.brand_id) > 0, true,
+        false)                                                                                          as hasChild
+        from t_bdmp_assets_dict_brand b1
+        <where>
+            <if test="dictBO.isDirectory">
+                and (parent_id is null or parent_id = '')
+            </if>
+            <if test="null != dictBO.parentId and '' != dictBO.parentId">
+                and parent_id = #{dictBO.parentId}
+            </if>
+            <if test="null != dictBO.name and '' != dictBO.name">
+                and brand_name like concat('%',#{dictBO.name},'%')
+            </if>
+            <if test="null != dictBO.id and '' != dictBO.id">
+                and or brand_id = #{dictBO.id}
+            </if>
+            <if test="null != dictBO.code and '' != dictBO.code">
+                and brand_no like concat('%',#{dictBO.code},'%')
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,1863 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.DeviceDao">
+    <!-- 根据设施id查设备 -->
+    <select id="selectByFacId" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Device">
+        select *
+        from t_bdmp_assets_device
+        where (facilities_id in
+               (select facilities_id from t_bdmp_assets_facilities where parent_id = #{facilitiesId}) or
+               facilities_id = #{facilitiesId})
+    </select>
+
+    <!-- 查询设备 -->
+    <select id="getDeviceDetail" resultType="java.util.Map">
+        select device.device_code                                                                                    as deviceNo,
+               device.device_id                                                                                      as deviceRecordId,
+               device.device_name                                                                                    as deviceName,
+               device.device_id_old                                                                                  as originId,
+               IFNULL(device.center_off_no, device.center_off_no_des)                                                as centerOffNo,
+               device.direction                                                                                      as direction,
+               (case
+                    when (device.work_status is null or device.work_status = '' or device.work_status = '0') then 0
+                    else 1 end)                                                                                      as workStatus,
+               device.latitude                                                                                       as latitude,
+               device.longitude                                                                                      as longitude,
+               (
+                   select org_name
+                   from t_bdmp_sys_org org
+                   where org.org_id = (
+                       select way.manage_id
+                       from t_bdmp_assets_waysection way
+                       where way.waysection_id = (
+                           SELECT device.waysection_id from t_bdmp_assets_device device where device_id = #{deviceId}
+                       )
+                   )
+               )                                                                                                     as compName,
+               (
+                   select org_id
+                   from t_bdmp_sys_org org
+                   where org.org_id = (
+                       select way.manage_id
+                       from t_bdmp_assets_waysection way
+                       where way.waysection_id = (
+                           SELECT device.waysection_id from t_bdmp_assets_device device where device_id = #{deviceId}
+                       )
+                   )
+               )                                                                                                     as orgId,
+               (
+                   select org_short_name
+                   from t_bdmp_sys_org org
+                   where org.org_id = (
+                       select way.manage_id
+                       from t_bdmp_assets_waysection way
+                       where way.waysection_id = (
+                           SELECT device.waysection_id from t_bdmp_assets_device device where device_id = #{deviceId}
+                       )
+                   )
+               )                                                                                                     as shortName,
+               (select dict.system_name
+                from t_bdmp_assets_dict_system dict
+                where dict.system_id = device.system_id)                                                             as systemName,
+               (select waysection_name
+                from t_bdmp_assets_waysection way
+                where way.waysection_id =
+                      (select device.waysection_id from t_bdmp_assets_device device where device_id = #{deviceId})
+               )                                                                                                     as waySectionName,
+               waysection_id as waySectionId,
+               facilities_id as facilitiesId,
+               (select facilities_name from t_bdmp_assets_facilities where facilities_id = device.facilities_id) as facilitiesName,
+               (select way.ori_waynet_id
+                from t_bdmp_assets_waysection way
+                where way.waysection_id =
+                      (select device.waysection_id from t_bdmp_assets_device device where device_id = #{deviceId})
+               )                                                                                                     as oriWaysectionNo,
+               display_ratio displayRatio,
+               display_color displayColor,
+               ip,
+               port,
+               device_type deviceType,
+               remark,
+               dict.name as deviceTypeName,
+               dictDevice.name as deviceDictName,
+               device.device_dict_id
+        from t_bdmp_assets_device device
+        left join t_bdmp_assets_dict dict on device.device_type = dict.code
+        left join t_bdmp_assets_dict_device dictDevice on device.device_dict_id = dictDevice.device_dict_id
+        where device_id = #{deviceId}
+    </select>
+
+    <!-- 获取收费站下的设备列表 -->
+    <select id="getDeviceByTollStation" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.TollStationDeviceBO">
+        select system_id                              systemId,
+               (select dict.system_name
+                from t_bdmp_assets_dict_system dict
+                where dict.system_id = dev.system_id) systemName,
+               device_id                              id,
+               device_name                            name,
+               dev.device_id_old                      originId,
+               dev.ip,
+               dev.longitude,
+               dev.latitude,
+               (case
+                    when (dev.work_status is null or dev.work_status = '' or dev.work_status = '0') then 0
+                    else 1 end)                       status
+        from t_bdmp_assets_device dev
+        where dev.facilities_id = #{stationId}
+           or dev.facilities_id in (select facilities_id from t_bdmp_assets_facilities where parent_id = #{stationId})
+    </select>
+
+    <!--&lt;!&ndash; 获取设备类型分类信息 &ndash;&gt;-->
+    <!--<select id="getDeviceStatByType" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.DeviceStatByTypeBO">-->
+    <!--select-->
+    <!--count(*)                as total,-->
+    <!--way.waynet_id           as waysectionNo,-->
+    <!--way.waysection_id       as waysectionId,-->
+    <!--way.ori_waynet_id   as oriWaysectionNo,-->
+    <!--way.waysection_name     as waysectionName,-->
+    <!--way.waysection_s_name   as waysectionSName,-->
+    <!--IFNULL(device.device_type,'其他')      as code,-->
+    <!--IFNULL(dict.name,'其他')               as name-->
+    <!--from-->
+    <!--(-->
+    <!--select device_type,facilities_id from t_bdmp_assets_device where device_type in('130200','130300','131100')-->
+    <!--union all-->
+    <!--select '130100' as device_type,geographyinfo_id as facilities_id from t_bdmp_assets_camera_resource_yt where `type`='20'-->
+    <!--union all-->
+    <!--select '130100' as device_type,geographyinfo_id as facilities_id from t_bdmp_assets_camera_resource_tl where device_type != '6'-->
+    <!--) device-->
+    <!--left join t_bdmp_assets_facilities fac on device.facilities_id = fac.facilities_id-->
+    <!--left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id-->
+    <!--left join t_bdmp_assets_dict dict on device.device_type = dict.CODE-->
+    <!--where device.facilities_id in (-->
+    <!--select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(-->
+    <!--select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')-->
+    <!--<if test="isUseUserPermissions">-->
+    <!--<if test="1 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="2 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="3 == dataPermissionsLevel">-->
+    <!--and fac.facilities_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--</if>-->
+    <!--<if test=" 'group' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'org' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'way' == nodeType">-->
+    <!--and fac.waysection_id = #{orgId}-->
+    <!--</if>-->
+    <!--<if test=" 'fac' == nodeType">-->
+    <!--and fac.facilities_id = #{orgId}-->
+    <!--</if>-->
+    <!--) or facc.parent_id in(-->
+    <!--select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')-->
+    <!--<if test="isUseUserPermissions">-->
+    <!--<if test="1 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="2 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="3 == dataPermissionsLevel">-->
+    <!--and fac.facilities_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--</if>-->
+    <!--<if test=" 'group' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'org' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'way' == nodeType">-->
+    <!--and fac.waysection_id = #{orgId}-->
+    <!--</if>-->
+    <!--<if test=" 'fac' == nodeType">-->
+    <!--and fac.facilities_id = #{orgId}-->
+    <!--</if>-->
+    <!--)-->
+    <!--)-->
+    <!--GROUP BY device.device_type,way.waysection_id;-->
+    <!--</select>-->
+
+    <!--&lt;!&ndash; 根据设备类型 获取设备列表 &ndash;&gt;-->
+    <!--<select id="getDeviceInfoListByType" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Device">-->
+    <!--<choose>-->
+    <!--<when test="'130100' == code">-->
+    <!--select device_id, device_code, longitude, latitude, ip, device_id_old, device_name, work_status, data_source-->
+    <!--from-->
+    <!--(-->
+    <!--select '1' as data_source,-->
+    <!--(case when `status`='10' then 0 when `status`='20' then 1 else 0 end) as work_status,-->
+    <!--id as device_id, id as device_code, '130100' as device_type, coord_x as longitude, coord_y as latitude, '' as ip, id as device_id_old, name as device_name, geographyinfo_id as facilities_id from t_bdmp_assets_camera_resource_yt where `type`='20'-->
+    <!--union all-->
+    <!--select '2' as data_source,-->
+    <!--(case when `online_status`='1' then 0 when `online_status`='2' then 1 else 0 end) as work_status,-->
+    <!--camera_id as device_id, camera_id as device_code, '130100' as device_type, longitude, latitude, camera_ip as ip, camera_id as device_id_old, camera_name as device_name, geographyinfo_id as facilities_id from t_bdmp_assets_camera_resource_tl where device_type != '6'-->
+    <!--)	device-->
+    <!--WHERE 1=1-->
+    <!--</when>-->
+    <!--<otherwise>-->
+    <!--select device_id, device_code, longitude, latitude, ip, device_id_old, device_name,-->
+    <!--(case when (work_status is null or work_status = '' or work_status='0') then 0 else 1 end) as work_status,-->
+    <!--'' as data_source-->
+    <!--from t_bdmp_assets_device device where device.device_type = #{code}-->
+    <!--</otherwise>-->
+    <!--</choose>-->
+    <!--and device.facilities_id in (-->
+    <!--select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(-->
+    <!--select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')-->
+    <!--<if test="isUseUserPermissions">-->
+    <!--<if test="1 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="2 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="3 == dataPermissionsLevel">-->
+    <!--and fac.facilities_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--</if>-->
+    <!--<if test=" 'group' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'org' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'way' == nodeType">-->
+    <!--and fac.waysection_id = #{orgId}-->
+    <!--</if>-->
+    <!--<if test=" 'fac' == nodeType">-->
+    <!--and fac.facilities_id = #{orgId}-->
+    <!--</if>-->
+    <!--) or facc.parent_id in(-->
+    <!--select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')-->
+    <!--<if test="isUseUserPermissions">-->
+    <!--<if test="1 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="2 == dataPermissionsLevel">-->
+    <!--and fac.waysection_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test="3 == dataPermissionsLevel">-->
+    <!--and fac.facilities_id in (-->
+    <!--select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'-->
+    <!--)-->
+    <!--</if>-->
+    <!--</if>-->
+    <!--<if test=" 'group' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (-->
+    <!--select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}-->
+    <!--)-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'org' == nodeType">-->
+    <!--and fac.waysection_id in (-->
+    <!--select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}-->
+    <!--)-->
+    <!--</if>-->
+    <!--<if test=" 'way' == nodeType">-->
+    <!--and fac.waysection_id = #{orgId}-->
+    <!--</if>-->
+    <!--<if test=" 'fac' == nodeType">-->
+    <!--and fac.facilities_id = #{orgId}-->
+    <!--</if>-->
+    <!--)-->
+    <!--)-->
+    <!--</select>-->
+
+    <!-- 获取设备类型分类信息 -->
+    <select id="getDeviceStatByType" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.DeviceStatByTypeBO">
+        select
+        count(*) as total,
+        IFNULL(device.device_type,'其他') as code,
+        IFNULL(dict.name,'其他') as name
+        from
+        (
+        select device_type,facilities_id from t_bdmp_assets_device where device_type in('130200','130300','131100')
+        <if test="null != search and '' != search">
+            and (device_name like concat('%',#{search},'%') or center_off_no_des like concat('%',#{search},'%') or center_off_no like concat('%',#{search},'%'))
+        </if>
+        union all
+        select '130100' as device_type,geographyinfo_id as facilities_id from t_bdmp_assets_camera_resource_yt yt
+        where type = 20 and ( yt.`status`='10' and yt.location_type != '12' and yt.location_type != '10')
+        <if test="null != search and '' != search">
+            and camera_name like concat('%',#{search},'%')
+        </if>
+<!--        <if test="null != userType and 2 == userType">
+            and yt.`status`='10' and yt.location_type != '12'
+        </if>-->
+        ) device
+        left join t_bdmp_assets_dict dict on device.device_type = dict.CODE
+        where device.facilities_id in (
+        select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        ) or facc.parent_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        )
+        )
+        GROUP BY device.device_type
+    </select>
+
+    <!-- 根据设备类型 获取设备列表 -->
+    <select id="getDeviceInfoListByType" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Device">
+        select device.*,temp.waysection_id,temp.waysection_name,temp.facilities_name,temp.org_id,
+               temp.org_name,temp.org_short_name as shortName,system.system_name as systemName,
+               remark,dict.name as deviceTypeName,deviceDict.name as deviceDictName
+               from (
+        <choose>
+            <when test="'130100' == code">
+                select device_id, device_code, longitude, latitude, ip, device_id_old, device_name, work_status,
+                data_source, center_off_no as center_off_no_des, locationType,"" AS systemId,facilities_id,
+                device_type,location,"" as remark,direction,"" as device_dict_id
+                from
+                (
+                SELECT
+                '1' AS data_source,
+                ( CASE WHEN yt.`status` = 10 THEN 1 WHEN yt.`status` = 20 THEN 0 ELSE 0 END ) AS work_status,
+                yt.location_type AS locationType,
+                yt.id AS device_id,
+                yt.id AS device_code,
+                '130100' AS device_type,
+                yt.coord_x AS longitude,
+                yt.coord_y AS latitude,
+                "" AS ip,
+                yt.id AS device_id_old,
+                yt.NAME AS device_name,
+                yt.geographyinfo_id AS facilities_id,
+                yt.way_id AS waysectionId,
+                yt.location,
+                "" AS systemId,
+                yt.center_off_no,
+                yt.direction
+                FROM
+                t_bdmp_assets_camera_resource_yt yt
+                <where>
+                    <if test="null != search and '' != search">
+                        and yt.name like concat('%',#{search},'%')
+                    </if>
+                    <if test="2 == userType">
+                        and yt.`status`='10' and location_type != '12'
+                    </if>
+                    and type = 20
+                </where>
+                ) device
+                WHERE 1=1
+            </when>
+            <otherwise>
+                select device_id, device_code, longitude, latitude, ip, device_id_old, device_name,
+                (case when (work_status is null or work_status = '' or work_status='0') then 0 else 1 end) as
+                work_status,
+                '' as data_source, IFNULL(center_off_no, center_off_no_des) as center_off_no_des, '' as locationType,
+                system_id as systemId,facilities_id,device_type,location,remark,direction,device_dict_id
+                from t_bdmp_assets_device device where device.device_type = #{code}
+                <if test="null != search and '' != search">
+                    and (device.device_name like concat('%',#{search},'%') or device.center_off_no_des like
+                    concat('%',#{search},'%') or device.center_off_no like
+                    concat('%',#{search},'%'))
+                </if>
+            </otherwise>
+        </choose>
+        ) device
+        inner join (
+            select org_id,org_name,org_short_name,way.waysection_id,way.waysection_name,facilities_id,facilities_name
+            from t_bdmp_assets_facilities fac
+            inner join t_bdmp_assets_waysection way on way.waysection_id = fac.waysection_id
+            inner join t_bdmp_sys_org org on org.org_id = way.manage_id
+            where fac.facilities_id in
+            (
+                select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(
+                select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+                <if test="isUseUserPermissions">
+                    <if test="1 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                        select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and fac.facilities_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                </if>
+                <if test=" 'group' == nodeType">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                    )
+                    )
+                </if>
+                <if test=" 'org' == nodeType">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                    )
+                </if>
+                <if test=" 'way' == nodeType">
+                    and fac.waysection_id = #{orgId}
+                </if>
+                <if test=" 'fac' == nodeType">
+                    and fac.facilities_id = #{orgId}
+                </if>
+                ) or facc.parent_id in(
+                select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+                <if test="isUseUserPermissions">
+                    <if test="1 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                        select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                        )
+                    </if>
+                    <if test="2 == dataPermissionsLevel">
+                        and fac.waysection_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                    <if test="3 == dataPermissionsLevel">
+                        and fac.facilities_id in (
+                        select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                        )
+                    </if>
+                </if>
+                <if test=" 'group' == nodeType">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+                    )
+                    )
+                </if>
+                <if test=" 'org' == nodeType">
+                    and fac.waysection_id in (
+                    select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+                    )
+                </if>
+                <if test=" 'way' == nodeType">
+                    and fac.waysection_id = #{orgId}
+                </if>
+                <if test=" 'fac' == nodeType">
+                    and fac.facilities_id = #{orgId}
+                </if>
+                )
+            )
+        ) temp
+        on device.facilities_id = temp.facilities_id
+        left join t_bdmp_assets_dict_system system on device.systemId = system.system_id
+        left join t_bdmp_assets_dict dict on device.device_type = dict.code
+        left join t_bdmp_assets_dict_device deviceDict on device.device_dict_id = deviceDict.device_dict_id
+    </select>
+
+    <!-- 查询摄像头 -->
+    <select id="selectCameraByFacId" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Device">
+        select *
+        from t_bdmp_assets_device
+        where facilities_id = #{facId}
+          and device_type = '130100'
+    </select>
+
+    <!-- 获取某系统类型下 设备数量 -->
+    <select id="getDeviceCountBySystem" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.DeviceStatisticsInfo">
+        select
+        (case when (work_status is null or work_status = '' or work_status='0') then 0 else 1 end) status,
+        count(*) total
+        from t_bdmp_assets_device device
+        where
+        device.system_id IN
+        <foreach item="systemId" index="index" collection="systemIds" separator="," open="(" close=")">
+            <trim>
+                #{systemId}
+            </trim>
+        </foreach>
+        and device.facilities_id in (
+        select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        ) or facc.parent_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        )
+        ) group by status
+    </select>
+
+    <!-- 获取设备工作状态总况信息接口 -->
+    <select id="getDeviceStatInfo" resultType="java.util.HashMap">
+        select
+        count(*) as total,
+
+        sum(case when (device.work_status is not null and device.work_status != '' and device.work_status!='0') then 1
+        else 0 end ) as faultNumber
+        FROM t_bdmp_assets_device device where device.facilities_id in (
+        select facilities_id from t_bdmp_assets_facilities facc where facc.facilities_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        ) or facc.parent_id in(
+        select facilities_id from t_bdmp_assets_facilities fac where (fac.parent_id is null or fac.parent_id = '')
+        <if test="isUseUserPermissions">
+            <if test="1 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+                )
+            </if>
+            <if test="2 == dataPermissionsLevel">
+                and fac.waysection_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+            <if test="3 == dataPermissionsLevel">
+                and fac.facilities_id in (
+                select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                )
+            </if>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+            select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId}
+            )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+            select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        )
+        )
+    </select>
+
+    <!-- 获取附近摄像机资源 -->
+    <select id="getCameraByPoint" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.CameraResourceNearBO">
+        select cameraId,cameraName,cameraIp,location,wayId,wayName,onlineStatus,locationType,
+        facilitiesId,longitude,latitude,dataSource,distanceMeter/1000 as distanceKm,uuid,hasPTZ,center_off_no
+        from (
+        select camera.*,
+        round(6378.137 * 2 *
+        asin(
+        sqrt(
+        pow(sin(( #{latitude} * PI() / 180 - latitude * pi() / 180) / 2 ), 2)
+        + cos(#{latitude} * pi() / 180) * cos(latitude * pi() / 180) * pow(sin((#{longitude} * PI() / 180 - longitude *
+        pi() / 180) / 2), 2)
+        )
+        ) * 1000
+        ) as distanceMeter
+        from(
+        select '1' as dataSource, id as cameraId,name as cameraName,'' as cameraIp,location,way_id as wayId,way_name as
+        wayName,has_ptz as hasPTZ,
+        (case when `status`='10' then 1 when `status`='20' then 0 else 1 end) as onlineStatus,location_type as locationType,
+        geographyinfo_id as facilitiesId, coord_x as longitude, coord_y as latitude,"" as uuid,center_off_no from
+        t_bdmp_assets_camera_resource_yt
+        where `type`='20' and coord_x is not null and coord_x !=0 and coord_x !='' and coord_y is not null and coord_y
+        !=0 and coord_y !=''
+        <if test="null != wayIds and '' != wayIds">
+            and way_id in
+            <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{wayId}
+                </trim>
+            </foreach>
+        </if>
+        <if test="null != resourceIds and '' != resourceIds">
+            or id in
+            <foreach collection="resourceIds.split(',')" item="resourceId" index="index" separator="," open="("
+                     close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+        </if>
+        <if test="null != excludeLocationTypeArray">
+            and location_type not in
+            <foreach collection="excludeLocationTypeArray" item="locationType" open="(" separator="," close=")">
+                #{locationType}
+            </foreach>
+        </if>
+        union all
+        select '2' as dataSource, camera_id as cameraId,camera_name as cameraName,camera_ip as cameraIp,location,way_id
+        as wayId,way_name as wayName,null as hasPTZ,
+        (case when `online_status`='1' then 1 when `online_status`='2' then 0 else 1 end) as onlineStatus,location_type as locationType,
+        geographyinfo_id as facilitiesId,longitude, latitude,uuid,"" as center_off_no from t_bdmp_assets_camera_resource_tl
+        where device_type != '6' and longitude is not null and longitude !=0 and longitude !='' and latitude is not null
+        and latitude !=0 and latitude !=''
+        <if test="null != wayIds and '' != wayIds">
+            and way_id in
+            <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{wayId}
+                </trim>
+            </foreach>
+        </if>
+        <if test="null != resourceIds and '' != resourceIds">
+            or uuid in
+            <foreach collection="resourceIds.split(',')" item="resourceId" index="index" separator="," open="("
+                     close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+        </if>
+        union all
+
+        select '3' as dataSource, id as cameraId,name as cameraName,ip as cameraIp,location,way_id as wayId,way_name as
+        wayName,has_ptz as hasPTZ,
+        (case when `status`='10' then 1 when `status`='20' then 0 else 1 end) as onlineStatus,location_type as locationType,
+        geographyinfo_id as facilitiesId, coord_x as longitude, coord_y as latitude,"" as uuid,"" as center_off_no from
+        t_bdmp_assets_camera_resource_sy
+        where `type`='20' and coord_x is not null and coord_x !=0 and coord_x !='' and coord_y is not null and coord_y
+        !=0 and coord_y !=''
+        <if test="null != wayIds and '' != wayIds">
+            and way_id in
+            <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                <trim>
+                    #{wayId}
+                </trim>
+            </foreach>
+        </if>
+        <if test="null != resourceIds and '' != resourceIds">
+            or id in
+            <foreach collection="resourceIds.split(',')" item="resourceId" index="index" separator="," open="("
+                     close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+        </if>
+        ) camera
+        ) a
+        where a.distanceMeter &lt; #{distanceKm} * 1000
+        <if test="2 == userType">
+            and onlineStatus='1' and locationType != '12'
+        </if>
+        <if test="null != resourceIds and '' != resourceIds">
+            or cameraId in
+            <foreach collection="resourceIds.split(',')" item="resourceId" index="index" separator="," open="("
+                     close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+            or uuid in
+            <foreach collection="resourceIds.split(',')" item="resourceId" index="index" separator="," open="("
+                     close=")">
+                <trim>
+                    #{resourceId}
+                </trim>
+            </foreach>
+        </if>
+        order by a.distanceMeter asc
+    </select>
+
+    <!-- 获取附近设备资源 -->
+    <select id="getDeviceByPoint" resultType="com.rhy.bdmp.open.modules.assets.domain.bo.DeviceResourceNearBO">
+        select
+        deviceRecordId,deviceName,deviceNo,originId,workStatus,latitude,longitude,code,direction,centerOffNo,location,distanceMeter/1000
+        as distanceKm,facilities_id
+        from (
+        select device.*,
+        round(6378.137 * 2 *
+        asin(
+        sqrt(
+        pow(sin(( #{latitude} * PI() / 180 - latitude * pi() / 180) / 2 ), 2)
+        + cos(#{latitude} * pi() / 180) * cos(latitude * pi() / 180) * pow(sin((#{longitude} * PI() / 180 - longitude *
+        pi() / 180) / 2), 2)
+        )
+        ) * 1000
+        ) as distanceMeter
+        from(
+        select
+        device_id as deviceRecordId,
+        device_name as deviceName,
+        device_code as deviceNo,
+        device_id_old as originId,
+        (case when (work_status is null or work_status = '' or work_status='0') then 0 else 1 end) as workStatus,
+        longitude as longitude,
+        latitude as latitude,
+        device_type as code,
+        direction as direction,
+        IFNULL(center_off_no, center_off_no_des) as centerOffNo,
+        location as location,
+        facilities_id
+        from t_bdmp_assets_device
+        <where>
+            and longitude is not null and longitude !=0 and longitude !='' and latitude is not null and latitude !=0 and
+            latitude !=''
+            <if test="null != wayIds and '' != wayIds">
+                and facilities_id in(
+                select facilities_id from t_bdmp_assets_facilities where waysection_id in
+                <foreach collection="wayIds.split(',')" item="wayId" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{wayId}
+                    </trim>
+                </foreach>
+                )
+            </if>
+            <if test="null != codes and '' != codes">
+                and device_type in
+                <foreach collection="codes.split(',')" item="code" index="index" separator="," open="(" close=")">
+                    <trim>
+                        #{code}
+                    </trim>
+                </foreach>
+            </if>
+        </where>
+        ) device
+        ) a
+        where a.distanceMeter &lt; #{distanceKm} * 1000 order by a.distanceMeter asc
+    </select>
+
+    <!--数据设备过滤-->
+    <select id="getDevice" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select
+        device.*,
+        (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+        fac.facilities_name,
+        fac.facilities_code,
+        way.waysection_name,
+        sys.system_name as systemName,
+        org.org_id,
+        org.org_short_name as orgName,
+        if(parentFac.facilities_type = '32330200',parentFac.facilities_id,null) as tollStationId,
+        if(parentFac.facilities_type = '32330200',parentFac.facilities_name,null) as tollStationName,
+        dict.name as deviceTypeName,
+        createUser.username as createBy,
+        updateUser.username as updateBy,
+        lane.lane_id as laneId,
+        (
+            select d2.device_id from t_bdmp_assets_device d1,t_bdmp_assets_device_external d2
+            where d1.device_id = d2.device_id
+              and d1.device_dict_id = '1328000002'
+              and d2.external_id = device.device_id
+        LIMIT 1
+        )
+        owningDeviceId
+        from (select
+        device_id,
+        data_collect_type,
+        device_type,
+        device_dict_id,
+        device_name,
+        device_code,
+        ip,
+        direction,
+        longitude,
+        latitude,
+        update_time,
+        location,
+        IFNULL(center_off_no, center_off_no_des) as center_off_no,
+        manufacturer,
+        manufacturer_id,
+        facilities_id,
+        waysection_id,
+        system_id,
+        sort,
+        create_time,
+        create_by createUserId,
+        update_by updateUserId,
+        pic,
+        device_model,
+        lane_num,
+        seria_number,
+        protocol_apply_scope,
+        remark,
+        device_id_old
+        from t_bdmp_assets_device
+        <where>
+            <if test="null != deviceTypes and deviceTypes.size() > 0">
+                and device_type in
+                <foreach item="deviceType" index="index" collection="deviceTypes" separator="," open="(" close=")">
+                    <trim>
+                        #{deviceType}
+                    </trim>
+                </foreach>
+            </if>
+            <if test=" null != deviceDictId and '' != deviceDictId">
+                and device_dict_id = #{deviceDictId}
+            </if>
+            <if test=" null != deviceName and '' != deviceName">
+                and device_name like concat("%",#{deviceName},"%")
+            </if>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and facilities_id in (
+                    select facilities_id from t_bdmp_assets_facilities where parent_id in(
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    waysection_id in (
+                    select waysection_id from t_bdmp_assets_waysection where manage_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                    )
+                    union all
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    waysection_id in (
+                    select waysection_id from t_bdmp_assets_waysection where manage_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                    )
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and facilities_id in (
+                    select facilities_id from t_bdmp_assets_facilities where parent_id in(
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    waysection_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                    union all
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    waysection_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and facilities_id in (
+                    select facilities_id from t_bdmp_assets_facilities where parent_id in(
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    facilities_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                    union all
+                    select facilities_id from t_bdmp_assets_facilities where (parent_id is null or parent_id = '') and
+                    facilities_id in (
+                    select permissions_id from t_bdmp_sys_user_data where user_id=#{userId} and data_type='2'
+                    )
+                    )
+                </if>
+            </if>
+            <if test=" 'group' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id in (
+                select waysection_id from t_bdmp_assets_waysection where manage_id in (
+                select org_id from t_bdmp_sys_org where parent_id = #{orgId} and org_type='000300'
+                )
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id in (
+                select waysection_id from t_bdmp_assets_waysection where manage_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id = #{orgId}
+                )
+            </if>
+            <if test=" 'fac' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities
+                where parent_id = #{orgId}
+                union
+                select facilities_id from t_bdmp_assets_facilities
+                where facilities_id = #{orgId}
+                and (parent_id is null or parent_id = '')
+                )
+            </if>
+            <if test=" 'subFac' == nodeType">
+                and facilities_id = (
+                select facilities_id from t_bdmp_assets_facilities
+                where (parent_id is not null and parent_id != '')
+                and facilities_id = #{orgId})
+            </if>
+        </where>
+        ) device
+        left join t_bdmp_assets_facilities fac
+        on device.facilities_id = fac.facilities_id
+        left join t_bdmp_assets_facilities parentFac
+        on parentFac.facilities_id = fac.parent_id
+        left join t_bdmp_assets_waysection way
+        on fac.waysection_id = way.waysection_id
+        left join t_bdmp_assets_dict_system sys
+        on device.system_id = sys.system_id
+        left join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        left join t_bdmp_assets_dict dict
+        on dict.code = device.device_type
+        left join t_bdmp_sys_user createUser
+        on createUser.user_id = device.createUserId
+        left join t_bdmp_sys_user updateUser
+        on updateUser.user_id = device.updateUserId
+        left join t_bdmp_assets_facilities_toll_station_lane lane
+        on lane.facilities_id = device.facilities_id
+    </select>
+
+    <resultMap id="DeviceVoMap" type="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo" />
+    <resultMap id="count" type="Long" >
+        <result column="count" jdbcType="INTEGER" javaType="Long" />
+    </resultMap>
+    <select id="getManufacturerDevice" resultMap="DeviceVoMap,count">
+        select SQL_CALC_FOUND_ROWS
+        device.*,
+        fac.facilities_name,
+        way.waysection_name,
+        sys.system_name as systemName,
+        org.org_id,
+        org.org_short_name as orgName,
+        if(parentFac.facilities_type = '32330200',parentFac.facilities_id,null) as tollStationId,
+        if(parentFac.facilities_type = '32330200',parentFac.facilities_name,null) as tollStationName,
+        dict.name as deviceTypeName,
+        createUser.username as createBy,
+        updateUser.username as updateBy,
+        (select lane.lane_id from t_bdmp_assets_facilities_toll_station_lane lane where lane.facilities_id = device.facilities_id ) laneId
+        from (select
+        device_id,
+        device_type,
+        data_collect_type,
+        device_name,
+        device_code,
+        ip,
+        direction,
+        longitude,
+        latitude,
+        update_time,
+        location,
+        IFNULL(center_off_no, center_off_no_des) as center_off_no,
+        manufacturer,
+        manufacturer_id,
+        facilities_id,
+        waysection_id,
+        system_id,
+        sort,
+        create_time,
+        create_by createUserId,
+        update_by updateUserId,
+        pic,
+        device_model,
+        lane_num,
+        seria_number,
+        protocol_apply_scope,
+        device_id_old,
+        remark
+        from t_bdmp_assets_device
+        <where>
+            and device_id in (
+            select device_id from t_bdmp_assets_device
+            where manufacturer_id = #{userManufacturer}
+            )
+            <if test="null != deviceTypes and deviceTypes.size() > 0">
+                and device_type in
+                <foreach item="deviceType" index="index" collection="deviceTypes" separator="," open="(" close=")">
+                    <trim>
+                        #{deviceType}
+                    </trim>
+                </foreach>
+            </if>
+            <if test=" null != deviceDictId and '' != deviceDictId">
+                and device_dict_id = #{deviceDictId}
+            </if>
+            <if test=" null != deviceName and '' != deviceName">
+                and device_name like concat("%",#{deviceName},"%")
+            </if>
+            <if test=" 'group' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id in (
+                select waysection_id from t_bdmp_assets_waysection where manage_id in (
+                select org_id from t_bdmp_sys_org where parent_id = #{orgId} and org_type='000300'
+                )
+                )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id in (
+                select waysection_id from t_bdmp_assets_waysection where manage_id = #{orgId}
+                )
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities where waysection_id = #{orgId}
+                )
+            </if>
+            <if test=" 'fac' == nodeType">
+                and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities
+                where parent_id = #{orgId}
+                union
+                select facilities_id from t_bdmp_assets_facilities
+                where facilities_id = #{orgId}
+                and (parent_id is null or parent_id = '')
+                )
+            </if>
+            <if test=" 'subFac' == nodeType">
+                and facilities_id = (
+                select facilities_id from t_bdmp_assets_facilities
+                where (parent_id is not null and parent_id != '')
+                and facilities_id = #{orgId})
+            </if>
+        </where>
+        ) device
+        left join t_bdmp_assets_facilities fac
+        on device.facilities_id = fac.facilities_id
+        left join t_bdmp_assets_facilities parentFac
+        on parentFac.facilities_id = fac.parent_id
+        left join t_bdmp_assets_waysection way
+        on fac.waysection_id = way.waysection_id
+        left join t_bdmp_assets_dict_system sys
+        on device.system_id = sys.system_id
+        left join t_bdmp_sys_org org on way.manage_id = org.org_id
+        left join t_bdmp_assets_dict dict
+        on dict.code = device.device_type
+        left join t_bdmp_sys_user createUser
+        on createUser.user_id = device.createUserId
+        left join t_bdmp_sys_user updateUser
+        on updateUser.user_id = device.updateUserId
+        order by device.sort asc, device.create_time desc
+        limit #{start},#{end};
+        select FOUND_ROWS() as count;
+    </select>
+
+    <!--根据设备编号查询设备-->
+    <select id="getDeviceByCode" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select device.device_id,
+               device.device_type,
+               device.device_dict_id,
+               (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+               device.data_collect_type,
+               device.device_name,
+               device.device_code,
+               device.ip,
+               device.direction,
+               device.longitude,
+               device.latitude,
+               device.update_time,
+               device.location,
+               IFNULL(device.center_off_no, device.center_off_no_des) as center_off_no,
+               device.manufacturer,
+               device.manufacturer_id,
+               device.facilities_id,
+               device.waysection_id,
+               device.system_id,
+               device.sort,
+               device.create_time,
+               device.create_by                                                               userId,
+               device.pic,
+               device.device_model,
+               device.protocol_apply_scope,
+               device.lane_num,
+               device.seria_number,
+               device.remark,
+               device.device_id_old,
+               fac.facilities_name,
+               way.waysection_name,
+               sys.system_name                                                             as systemName,
+               org.org_id,
+               org.org_short_name                                                          as orgName,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_id, null)   as tollStationId,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_name, null) as tollStationName,
+               dict.name                                                                   as deviceTypeName,
+               createUser.username                                                         as createBy,
+               updateUser.username                                                         as updateBy,
+               lane.lane_id                                                                as laneId
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_facilities fac
+                           on device.facilities_id = fac.facilities_id
+                 left join t_bdmp_assets_facilities parentFac
+                           on parentFac.facilities_id = fac.parent_id
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_assets_dict_system sys
+                           on device.system_id = sys.system_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+                 left join t_bdmp_assets_dict dict
+                           on dict.code = device.device_type
+                 left join t_bdmp_sys_user createUser
+                           on createUser.user_id = device.create_by
+                 left join t_bdmp_sys_user updateUser
+                           on updateUser.user_id = device.update_by
+                 left join t_bdmp_assets_facilities_toll_station_lane lane
+                           on lane.facilities_id = device.facilities_id
+        where device.device_code = #{deviceCode} limit 1
+    </select>
+
+    <select id="getDeviceByDeviceId" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select device.device_id,
+               device.device_type,
+               device.device_dict_id,
+               (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+               device.data_collect_type,
+               device.device_name,
+               device.device_code,
+               device.ip,
+               device.direction,
+               device.longitude,
+               device.latitude,
+               device.update_time,
+               device.location,
+               IFNULL(device.center_off_no, device.center_off_no_des) as center_off_no,
+               device.manufacturer,
+               device.manufacturer_id,
+               device.facilities_id,
+               device.waysection_id,
+               device.system_id,
+               device.sort,
+               device.create_time,
+               device.create_by                                                               userId,
+               device.pic,
+               device.device_model,
+               device.protocol_apply_scope,
+               device.lane_num,
+               device.seria_number,
+               device.remark,
+               device.device_id_old,
+               fac.facilities_name,
+               way.waysection_name,
+               sys.system_name                                                             as systemName,
+               org.org_id,
+               org.org_short_name                                                          as orgName,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_id, null)   as tollStationId,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_name, null) as tollStationName,
+               dict.name                                                                   as deviceTypeName,
+               createUser.username                                                         as createBy,
+               updateUser.username                                                         as updateBy,
+               lane.lane_id                                                                as laneId
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_facilities fac
+                           on device.facilities_id = fac.facilities_id
+                 left join t_bdmp_assets_facilities parentFac
+                           on parentFac.facilities_id = fac.parent_id
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_assets_dict_system sys
+                           on device.system_id = sys.system_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+                 left join t_bdmp_assets_dict dict
+                           on dict.code = device.device_type
+                 left join t_bdmp_sys_user createUser
+                           on createUser.user_id = device.create_by
+                 left join t_bdmp_sys_user updateUser
+                           on updateUser.user_id = device.update_by
+                 left join t_bdmp_assets_facilities_toll_station_lane lane
+                           on lane.facilities_id = device.facilities_id
+        where device.device_id = #{deviceId}
+    </select>
+
+    <!--根据设备编号查询网关-->
+    <select id="getDeviceGateway" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select device.device_id,
+               device.device_type,
+               device.device_dict_id,
+               (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+               device.data_collect_type,
+               device.device_name,
+               device.device_code,
+               device.ip,
+               device.direction,
+               device.longitude,
+               device.latitude,
+               device.update_time,
+               device.location,
+               IFNULL(device.center_off_no, device.center_off_no_des) as center_off_no,
+               device.manufacturer,
+               device.manufacturer_id,
+               device.facilities_id,
+               device.waysection_id,
+               device.system_id,
+               device.sort,
+               device.create_time,
+               device.pic,
+               device.device_model,
+               device.protocol_apply_scope,
+               device.lane_num,
+               device.seria_number,
+               device.remark,
+               device.device_id_old,
+               fac.facilities_name,
+               way.waysection_name,
+               sys.system_name                                                             as systemName,
+               org.org_id,
+               org.org_short_name                                                          as orgName,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_id, null)   as tollStationId,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_name, null) as tollStationName,
+               dict.name                                                                   as deviceTypeName,
+               createUser.username                                                         as createBy,
+               updateUser.username                                                         as updateBy,
+               lane.lane_id                                                                as laneId
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_facilities fac
+                           on device.facilities_id = fac.facilities_id
+                 left join t_bdmp_assets_facilities parentFac
+                           on parentFac.facilities_id = fac.parent_id
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_assets_dict_system sys
+                           on device.system_id = sys.system_id
+                 left join t_bdmp_sys_org org on way.manage_id = org.org_id
+                 left join t_bdmp_assets_dict dict
+                           on dict.code = device.device_type
+                 left join t_bdmp_sys_user createUser
+                           on createUser.user_id = device.create_by
+                 left join t_bdmp_sys_user updateUser
+                           on updateUser.user_id = device.update_by
+                 left join t_bdmp_assets_facilities_toll_station_lane lane
+                           on lane.facilities_id = device.facilities_id
+        where device.device_code = (
+            select device_code
+            from t_bdmp_assets_device_external
+            where external_code = #{deviceCode}
+            limit 1
+            )
+        and device_type = '133800'
+            limit 1
+    </select>
+
+    <!--查询设备详情（根据设备id查询）-->
+    <select id="getDeviceById" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select device.device_id,
+               device.device_type,
+               device.device_dict_id,
+               (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+               device.device_name,
+               device.data_collect_type,
+               device.device_code,
+               device.ip,
+               device.direction,
+               device.longitude,
+               device.latitude,
+               device.update_time,
+               device.location,
+               IFNULL(device.center_off_no, device.center_off_no_des) as center_off_no,
+               device.manufacturer,
+               device.manufacturer_id,
+               device.facilities_id,
+               device.waysection_id,
+               device.system_id,
+               device.sort,
+               device.create_time,
+               device.lane_num,
+               device.seria_number,
+               device.remark,
+               device.device_id_old,
+               fac.facilities_name,
+               way.waysection_name,
+               sys.system_name                                                             as systemName,
+               org.org_id,
+               org.org_short_name                                                          as orgName,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_id, null)   as tollStationId,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_name, null) as tollStationName,
+               dict.name                                                                   as deviceTypeName,
+               createUser.username                                                         as createBy,
+               updateUser.username                                                         as updateBy,
+               lane.lane_id                                                                as laneId
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_facilities fac
+                           on device.facilities_id = fac.facilities_id
+                 left join t_bdmp_assets_facilities parentFac
+                           on parentFac.facilities_id = fac.parent_id
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_assets_dict_system sys
+                           on device.system_id = sys.system_id
+                 left join t_bdmp_sys_org org
+                           on way.manage_id = org.org_id
+                 left join t_bdmp_assets_dict dict
+                           on dict.code = device.device_type
+                 left join t_bdmp_sys_user createUser
+                           on createUser.user_id = device.create_by
+                 left join t_bdmp_sys_user updateUser
+                           on updateUser.user_id = device.update_by
+                 left join t_bdmp_assets_facilities_toll_station_lane lane
+                           on lane.facilities_id = device.facilities_id
+        where device.device_id = #{deviceId}
+    </select>
+
+    <!--查询网关设备的外接设备-->
+    <select id="getExternalDevice" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.DeviceVo">
+        select device.device_id,
+               device.device_type,
+               device.device_dict_id,
+               (select name from t_bdmp_assets_dict_device dd where dd.device_dict_id = device.device_dict_id )deviceDictName,
+               device.device_name,
+               device.device_code,
+               device.ip,
+               device.direction,
+               device.longitude,
+               device.latitude,
+               device.update_time,
+               device.location,
+               IFNULL(device.center_off_no, device.center_off_no_des) as center_off_no,
+               device.manufacturer,
+               device.manufacturer_id,
+               device.facilities_id,
+               device.waysection_id,
+               device.system_id,
+               device.device_model,
+               device.pic,
+               device.sort,
+               device.create_time,
+               device.lane_num,
+               device.seria_number,
+               device.device_id_old,
+               fac.facilities_name,
+               way.waysection_name,
+               sys.system_name                                                             as systemName,
+               org.org_id,
+               org.org_short_name                                                          as orgName,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_id, null)   as tollStationId,
+               if(parentFac.facilities_type = '32330200', parentFac.facilities_name, null) as tollStationName,
+               dict.name                                                                   as deviceTypeName,
+               createUser.username                                                         as createBy,
+               updateUser.username                                                         as updateBy,
+               lane.lane_id                                                                as laneId
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_facilities fac
+                           on device.facilities_id = fac.facilities_id
+                 left join t_bdmp_assets_facilities parentFac
+                           on parentFac.facilities_id = fac.parent_id
+                 left join t_bdmp_assets_waysection way
+                           on fac.waysection_id = way.waysection_id
+                 left join t_bdmp_assets_dict_system sys
+                           on device.system_id = sys.system_id
+                 left join t_bdmp_sys_org org
+                           on way.manage_id = org.org_id
+                 left join t_bdmp_assets_dict dict
+                           on dict.code = device.device_type
+                 left join t_bdmp_sys_user createUser
+                           on createUser.user_id = device.create_by
+                 left join t_bdmp_sys_user updateUser
+                           on updateUser.user_id = device.update_by
+                 left join t_bdmp_assets_facilities_toll_station_lane lane
+                           on lane.facilities_id = device.facilities_id
+        where device.device_id in (
+            select external_id
+            from t_bdmp_assets_device_external
+            where device_id = #{deviceId}
+        )
+        order by device.sort asc, device.create_time desc
+    </select>
+
+    <!--车道设备列表-->
+    <select id="getLaneDeviceList" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.LaneDeviceVo">
+        select device.device_id       deviceId,
+               device.device_name     deviceName,
+               device.device_type     deviceType,
+               dict.name              deviceTypeName,
+               device.manufacturer_id manufacturerId,
+               device.manufacturer    manufacturer,
+               fac.facilities_id      laneId,
+               fac.facilities_name    laneName,
+               external.device_id     gatewayId,
+               external.device_name   gatewayName
+        from t_bdmp_assets_device device
+                 left join t_bdmp_assets_dict dict
+                           on device.device_type = dict.code
+                 left join t_bdmp_assets_facilities fac
+                           on fac.facilities_id = device.facilities_id
+                 left join (select device_id, device_name, device_code
+                            from t_bdmp_assets_device
+                            where device_code in
+                                  (select external_code
+                                   from t_bdmp_assets_device_external)) external
+        on external.device_code = device.device_code
+        where device.facilities_id =
+            (select facilities_id from t_bdmp_assets_facilities_toll_station_lane where lane_id = #{laneId})
+    </select>
+
+    <select id="deviceStatistics" resultType="java.util.Map">
+        select * from (
+        select
+        device.device_id as id,
+        device.device_dict_id,
+        device.data_collect_type as dataCollectType,
+        device.device_code as deviceNo,
+        device.device_id as deviceRecordId,
+        device.device_name as deviceName,
+        device.device_id_old as originId,
+        device.location as location,
+        IFNULL(device.center_off_no,device.center_off_no_des) as centerOffNo,
+        device.direction as direction,
+        (case when (device.work_status is null or device.work_status = '' or device.work_status='0') then 0 else 1 end)
+        as workStatus,
+        device.latitude as latitude,
+        device.longitude as longitude,
+        device.device_type as deviceType,
+        if((device.device_mileage is null or device.device_mileage = ''),0,device.device_mileage) deviceMileage,
+        device.display_ratio displayRatio,
+        device.display_color displayColor,
+        device.ip,
+        device.port,
+        device.lane_num,
+        device.seria_number,
+        org.org_short_name as compName,
+        system.system_name as systemName,
+        way.waysection_id as waySectionId,
+        way.waysection_name as waySectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        dict.name as typeName,
+        fac.facilities_id as facilitiesId,
+        fac.facilities_name as facilitiesName,
+        org.org_id as orgId
+        from t_bdmp_assets_waysection way
+        inner join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        inner join t_bdmp_assets_facilities fac
+        on fac.waysection_id = way.waysection_id
+        inner join t_bdmp_assets_device device
+        on device.facilities_id = fac.facilities_id
+        inner join t_bdmp_assets_dict dict
+        on dict.code = device.device_type
+        left join t_bdmp_assets_dict_system system
+        on system.system_id = device.system_id
+        ) temp
+        <where>
+            and temp.deviceType IN
+            <foreach collection="deviceStatisticsBo.deviceTypes" item="deviceType" separator="," open="(" close=")">
+                <trim>
+                    #{deviceType}
+                </trim>
+            </foreach>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and temp.orgId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and temp.waysectionId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and temp.facilitiesId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == deviceStatisticsBo.nodeType">
+                and temp.orgId in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{deviceStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 1 == deviceStatisticsBo.nodeType">
+                and temp.orgId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test=" 2 == deviceStatisticsBo.nodeType">
+                and temp.waysectionId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == deviceStatisticsBo.nodeType">
+                and temp.facilitiesId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test="null != deviceStatisticsBo.deviceDictIds and deviceStatisticsBo.deviceDictIds.size() > 0">
+                and temp.device_dict_id IN
+                <foreach collection="deviceStatisticsBo.deviceDictIds" item="deviceDictId" separator="," open="("
+                         close=")">
+                    <trim>
+                        #{deviceDictId}
+                    </trim>
+                </foreach>
+            </if>
+            <if test="null != deviceStatisticsBo.deviceName and '' != deviceStatisticsBo.deviceName">
+                and temp.deviceName like concat("%",#{deviceStatisticsBo.deviceName},"%")
+            </if>
+        </where>
+    </select>
+
+    <select id="cameraStatistics" resultType="java.util.Map">
+        select * from (
+        select
+        device.id as deviceRecordId,
+        null as dataCollectType,
+        device.name as deviceName,
+        device.id as originId,
+        (case when device.`status`='10' then 1 when device.`status`='20' then 0 else 1 end) as workStatus,
+        device.coord_y as latitude,
+        device.coord_x as longitude,
+        device.location as location,
+        device.location_type as locationType,
+        "" as ip,
+        "130100" as deviceType,
+        device.has_ptz as hasPTZ,
+        org.org_short_name as compName,
+        way.waysection_name as waySectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        "摄像头" as typeName,
+        fac.facilities_id as facilitiesId,
+        fac.facilities_name as facilitiesName,
+        way.waysection_id as waySectionId,
+        org.org_id as orgId,
+        "cameraYt" as dataSource
+        from t_bdmp_assets_waysection way
+        inner join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        inner join t_bdmp_assets_facilities fac
+        on fac.waysection_id = way.waysection_id
+        inner join t_bdmp_assets_camera_resource_yt device
+        on device.geographyinfo_id = fac.facilities_id
+        union all
+        select
+        device.camera_id as deviceRecordId,
+        null as dataCollectType,
+        device.camera_name as deviceName,
+        device.camera_id as originId,
+        (case when device.`online_status`='1' then 1 when device.`online_status`='2' then 0 else 1 end) as workStatus,
+        device.latitude as latitude,
+        device.longitude as longitude,
+        device.location as location,
+        device.location_type as locationType,
+        "" as ip,
+        "130100" as deviceType,
+        null as hasPTZ,
+        org.org_short_name as compName,
+        way.waysection_name as waySectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        "摄像头" as typeName,
+        fac.facilities_id as facilitiesId,
+        fac.facilities_name as facilitiesName,
+        way.waysection_id as waySectionId,
+        org.org_id as orgId,
+        "cameraTl" as dataSource
+        from t_bdmp_assets_waysection way
+        inner join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        inner join t_bdmp_assets_facilities fac
+        on fac.waysection_id = way.waysection_id
+        inner join t_bdmp_assets_camera_resource_tl device
+        on device.geographyinfo_id = fac.facilities_id
+        union all
+        select
+        device.id as deviceRecordId,
+        null as dataCollectType,
+        device.name as deviceName,
+        device.id as originId,
+        (case when device.`status`='10' then 1 when device.`status`='20' then 0 else 1 end) as workStatus,
+        device.coord_y as latitude,
+        device.coord_x as longitude,
+        device.location as location,
+        device.location_type as locationType,
+        device.ip,
+        "130100" as deviceType,
+        device.has_ptz as hasPTZ,
+        org.org_short_name as compName,
+        way.waysection_name as waySectionName,
+        way.ori_waynet_id as oriWaysectionNo,
+        "摄像头" as typeName,
+        fac.facilities_id as facilitiesId,
+        fac.facilities_name as facilitiesName,
+        way.waysection_id as waySectionId,
+        org.org_id as orgId,
+        "cameraSy" as dataSource
+        from t_bdmp_assets_waysection way
+        inner join t_bdmp_sys_org org
+        on way.manage_id = org.org_id
+        inner join t_bdmp_assets_facilities fac
+        on fac.waysection_id = way.waysection_id
+        inner join t_bdmp_assets_camera_resource_sy device
+        on device.geographyinfo_id = fac.facilities_id
+        ) temp
+        <where>
+            <if test="userPermissions.isUseUserPermissions">
+                <if test="1 == userPermissions.dataPermissionsLevel">
+                    and temp.orgId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="2 == userPermissions.dataPermissionsLevel">
+                    and temp.waysectionId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+                <if test="3 == userPermissions.dataPermissionsLevel">
+                    and temp.facilitiesId in (
+                    select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userPermissions.userId} and
+                    data_type='2'
+                    )
+                </if>
+            </if>
+            <if test=" 0 == deviceStatisticsBo.nodeType">
+                and temp.orgId in (
+                select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{deviceStatisticsBo.orgId}
+                )
+            </if>
+            <if test=" 1 == deviceStatisticsBo.nodeType">
+                and temp.orgId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test=" 2 == deviceStatisticsBo.nodeType">
+                and temp.waysectionId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test=" 3 == deviceStatisticsBo.nodeType">
+                and temp.facilitiesId = #{deviceStatisticsBo.orgId}
+            </if>
+            <if test="null != deviceStatisticsBo.deviceName and '' != deviceStatisticsBo.deviceName">
+                and temp.deviceName like concat("%",#{deviceStatisticsBo.deviceName},"%")
+            </if>
+            <if test="2 == userType">
+                and temp.workStatus='1' and temp.locationType != '12'
+            </if>
+        </where>
+    </select>
+
+    <!--根据路段、方向查询摄像头-->
+    <select id="getUnidirectionalCameraList" resultType="com.rhy.bdmp.open.modules.assets.domain.to.CameraListTo">
+        select id,name,direction,center_off_no as centerOffNo,coord_x as longitude,coord_y as latitude from t_bdmp_assets_camera_resource_yt
+        where (center_off_no is not null and center_off_no != '')
+          and way_id = #{cameraByCenterOffNoBo.waysectionId}
+          and direction = #{cameraByCenterOffNoBo.direction}
+    </select>
+
+    <!--根据路段查询上行、下行的摄像头-->
+    <select id="getBilaterallyCameraList" resultType="com.rhy.bdmp.open.modules.assets.domain.to.CameraListTo">
+        select id,name,direction,center_off_no as centerOffNo,coord_x as longitude,coord_y as latitude from t_bdmp_assets_camera_resource_yt
+        where (center_off_no is not null and center_off_no != '')
+          and way_id = #{cameraByCenterOffNoBo.waysectionId}
+          and (direction is not null and direction != '')
+    </select>
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.AppDao">
+
+    <select id="getAppDir" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.AppDirVo">
+        select app_id,
+               app_name,
+               app_url,
+               app_url_type,
+               app_icon,
+               app_img,
+               description,
+               app_type_id,
+               wait_do_url,
+               is_join_auth_center,
+               sort,
+               datastatusid
+        from t_bdmp_sys_app
+        <where>
+            <if test="userPermissions.isUseUserPermissions">
+                and app_id in (select app_id from t_bdmp_sys_user_app where user_id = #{userPermissions.userId})
+            </if>
+            <if test="null != appDirBo.appTypeId and '' != appDirBo.appTypeId">
+                and app_type_id = #{appDirBo.appTypeId}
+            </if>
+        </where>
+        order by sort asc,create_time desc
+    </select>
+</mapper>

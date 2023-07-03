@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.UserDao">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.rhy.bdmp.system.modules.sys.domain.vo.UserVo">
+        <id column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="nick_name" property="nickName" />
+        <result column="password" property="password" />
+        <result column="user_type" property="userType" />
+        <result column="expired_time" property="expiredTime" />
+        <result column="pwd_reset_time" property="pwdResetTime" />
+        <result column="org_id" property="orgId" />
+        <result column="sex" property="sex" />
+        <result column="birthday" property="birthday" />
+        <result column="native_place" property="nativePlace" />
+        <result column="national" property="national" />
+        <result column="politics_status" property="politicsStatus" />
+        <result column="post" property="post" />
+        <result column="post_level" property="postLevel" />
+        <result column="most_education" property="mostEducation" />
+        <result column="graduated_school" property="graduatedSchool" />
+        <result column="phone" property="phone" />
+        <result column="email" property="email" />
+        <result column="certificate_type" property="certificateType" />
+        <result column="certificate_no" property="certificateNo" />
+        <result column="avatar" property="avatar" />
+        <result column="default_url" property="defaultUrl" />
+        <result column="sort" property="sort" />
+        <result column="datastatusid" property="datastatusid" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!--根据用户id添加用户应用表-->
+    <insert id="insertUserAppByUserId">
+        INSERT INTO t_bdmp_sys_user_app ( user_id, app_id, create_by, create_time )
+        VALUES
+        <foreach item='appId' index='index' collection='appIds' separator=',' open='' close=''>
+        <trim>
+            (#{userId},#{appId},#{currentUser},#{currentDateTime})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--更新用户角色权限（根据userId更新）-->
+    <insert id="insertUserRoleByUserId">
+        INSERT INTO t_bdmp_sys_user_role ( user_id, role_id,create_by, create_time )
+        VALUES
+        <foreach item='roleId' index='index' collection='roleIds' separator=',' open='' close=''>
+            <trim>
+                (#{userId},#{roleId},#{createBy},#{createTime})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--更新用户数据权限（根据用户id）-->
+    <insert id="insertUserDataByUserId">
+        INSERT INTO t_bdmp_sys_user_data ( user_id, permissions_id, data_type, create_by, create_time,app_id )
+        VALUES
+        <foreach item='permissonId' index='index' collection='permissonIds' separator=',' open='' close=''>
+            <trim>
+                (#{userId},#{permissonId},#{dataType},#{createBy},#{createTime},#{appId})
+            </trim>
+        </foreach>
+    </insert>
+
+    <!--删除用户应用表 关联数据（根据用户id删除）-->
+    <delete id="deleteUserAppByUserId">
+        DELETE
+        FROM
+	        t_bdmp_sys_user_app
+        <where>
+            user_id IN
+            <foreach item="userId" index="index" collection="userIds" separator="," open="(" close=")">
+                <trim>
+                    #{userId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+    <!--删除 用户数据权限表 关联数据（根据用户id删除）-->
+    <delete id="deleteUserDataByUserIdAndDataType">
+        DELETE
+        FROM
+        t_bdmp_sys_user_data
+        <where>
+            data_type = #{dataType}
+            AND user_id IN
+            <foreach item="userId" index="index" collection="userIds" separator="," open="(" close=")">
+                <trim>
+                    #{userId}
+                </trim>
+            </foreach>
+            <if test="null != appId and '' != appId">
+                AND app_id = #{appId}
+            </if>
+        </where>
+    </delete>
+
+    <!--删除 用户角色关系表 关联数据（根据用户id删除）-->
+    <delete id="deleteUserRoleByUserId">
+        DELETE
+        FROM
+        t_bdmp_sys_user_role
+        <where>
+            user_id IN
+            <foreach item="userId" index="index" collection="userIds" separator="," open="(" close=")">
+                <trim>
+                    #{userId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+
+    <!--删除用户映射（根据用户id）-->
+    <delete id="deleteUserMappingByUserId">
+        DELETE
+        FROM
+        t_bdmp_sys_user_mapping
+        <where>
+            user_id IN
+            <foreach item="userId" index="index" collection="userIds" separator="," open="(" close=")">
+                <trim>
+                    #{userId}
+                </trim>
+            </foreach>
+        </where>
+    </delete>
+
+    <!--删除用户角色权限（根据用户ID、应用ID）-->
+    <delete id="deleteUserRoleByUserIdAndAppId">
+        DELETE
+        FROM
+	        t_bdmp_sys_user_role
+        WHERE
+	        user_id = #{userId}
+	        AND role_id IN ( SELECT role_id FROM t_bdmp_sys_role WHERE app_id = #{appId} )
+    </delete>
+
+    <!--查询用户应用权限（根据用户ID,返回应用id集合）-->
+    <select id="findAppIdsByUserId" resultType="java.lang.String">
+        SELECT app_id FROM t_bdmp_sys_user_app
+        <where>
+            <if test="userId!=null and userId!=''">
+                user_id=#{userId}
+            </if>
+        </where>
+    </select>
+
+    <!--查询用户角色权限（根据用户ID,返回角色ID集合）-->
+    <select id="findRoleIdsByUserId" resultType="java.lang.String">
+        SELECT role_id FROM t_bdmp_sys_user_role
+        <where>
+            <if test="userId!=null and userId!=''">
+                user_id=#{userId}
+            </if>
+        </where>
+    </select>
+
+    <!--查询用户数据权限（根据用户ID,返回组织ID、dataType集合）-->
+    <select id="findUserDataByUserId" resultType="java.util.Map">
+        SELECT
+        permissions_id as permissionsId , data_type as dataType
+        FROM t_bdmp_sys_user_data
+        <where>
+            <if test="userId!=null and userId!=''">
+                user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <!--查找组织及其子组织下的所有用户-->
+    <select id="findUserListByOrgId" resultMap="BaseResultMap">
+        SELECT user.user_id,user.username,user.nick_name,user.user_type,user.expired_time,user.pwd_reset_time,user.org_id,user.sex,user.birthday,user.native_place,user.national,user.politics_status,user.post,user.post_level,user.most_education,user.graduated_school,user.phone,user.email,user.certificate_type,user.certificate_no,user.avatar,user.default_url,user.sort,user.datastatusid,user.create_by,user.create_time,user.update_by,user.update_time
+        FROM
+	        t_bdmp_sys_user user,(
+	        SELECT
+		        t.org_id
+	        FROM
+		        (
+		        SELECT
+			        a.id,
+		        IF
+			        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+		        FROM
+			        ( SELECT org_id AS id, parent_id AS pid FROM t_bdmp_sys_org ) a,
+			        ( SELECT @pids := #{orgId} ) vars
+		) b
+		JOIN t_bdmp_sys_org t ON b.id = t.org_id
+	        WHERE
+		        b.ischild != '0'
+		        OR t.org_id = '1'
+	        ) org
+        WHERE
+	        user.org_id = org.org_id
+    </select>
+
+    <!--查询用户数据权限（根据用户Id、权限类别、权限等级）-->
+    <select id="selectPermissionIds" resultType="java.lang.String">
+        SELECT
+        permissions_id
+        FROM
+        t_bdmp_sys_user_data
+        WHERE
+        user_id = #{userId}
+        AND data_type = #{dataType}
+    </select>
+
+    <!--根据用户ID和应用ID查找角色Ids(返回角色Ids)-->
+    <select id="findRoleIdsByUserIdAndAppId" resultType="java.lang.String">
+        SELECT
+	        role_id
+        FROM
+	        t_bdmp_sys_user_role ur
+        WHERE
+	        user_id = #{userId}
+	    AND EXISTS (
+	    SELECT
+		    role_id
+	    FROM
+		    t_bdmp_sys_role r
+	    WHERE
+	        app_id = #{appId}
+	    AND ur.role_id = r.role_id)
+    </select>
+
+    <select id="findAppByUser" resultType="com.rhy.bdmp.base.modules.sys.domain.po.App">
+        <choose>
+            <when test="isUseUserPermissions">
+                SELECT
+                a.app_id,a.app_name,a.app_url,a.app_icon,a.app_img,a.description,a.app_type_id,a.wait_do_url,a.sort,a.datastatusid,a.create_by,a.create_time,a.update_by,a.update_time
+                FROM t_bdmp_sys_app a,
+                ( SELECT app_id FROM t_bdmp_sys_user_app WHERE user_id = #{userId} ) b
+                WHERE
+                a.app_id = b.app_id
+                AND a.datastatusid = 1
+                ORDER BY a.sort asc, a.create_time desc
+            </when>
+            <otherwise>
+                SELECT
+                app_id,app_name,app_url,app_icon,app_img,description,app_type_id,wait_do_url,sort,datastatusid,create_by,create_time,update_by,update_time
+                FROM t_bdmp_sys_app
+                WHERE datastatusid = 1
+                ORDER BY sort asc, create_time desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--查询用户拥有的组织机构权限-->
+    <select id="getUserOrgPermission" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.UserPermissionVo">
+        select permission.user_id,
+               permission.permissions_id orgId,
+               org.org_type,
+               dict.name orgTypeName,
+               org.org_short_name orgName,
+               user.nick_name userName,
+               app.app_name
+        from t_bdmp_sys_user_data permission
+        left join t_bdmp_sys_org org
+        on permission.permissions_id = org.org_id
+        left join t_bdmp_sys_user user
+        on permission.user_id = user.user_id
+        left join t_bdmp_sys_app app
+        on app.app_id = permission.app_id
+        left join t_bdmp_assets_dict dict
+        on dict.code = org.org_type
+        where permission.user_id = #{userId}
+        and permission.data_type = 3
+        and permission.app_id = #{appId}
+    </select>
+
+    <!--查询拥有的app权限-->
+    <select id="getUserPermission" resultType="java.lang.String">
+        SELECT
+            permissions_id
+        FROM
+            t_bdmp_sys_user_data
+        WHERE
+            user_id = #{userId}
+        AND data_type = #{dataType}
+        <if test="null != appId and '' != appId">
+            AND app_id = #{appId}
+        </if>
+    </select>
+
+
+</mapper>

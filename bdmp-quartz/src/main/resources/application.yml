@@ -1,0 +1,31 @@
+server:
+  port: 60063
+  servlet:
+    context-path: /bdmpQuartz
+
+spring:
+  application:
+    name: bdmp-quartz
+
+ovit:
+  datasource:
+    multi:
+      primary: bdmp_public
+      enabled: true
+
+custom:
+  file:
+    downUrl: http://127.0.0.1:18200/bdmp/system/sys/plupload/showImg?fileId=
+
+
+
+
+
+
+
+
+
+
+#spring:
+#  profiles:
+#    active: ezjcprod

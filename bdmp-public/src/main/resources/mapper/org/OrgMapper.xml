@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.org.dao.OrgDao">
+    <!--获取运营集团-->
+    <select id="getGroup" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,parent_id as parentId,sort,'0' as nodeType,org_type as type
+        from t_bdmp_sys_org
+        where org_type = '000200'
+        <if test="userPermissions.isUseUserPermissions">
+            <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.groupPermission"></include>
+        </if>
+    </select>
+
+    <!--获取运营公司-->
+    <select id="getOrg" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,parent_id as parentId,sort,'1' as nodeType,org_type as type
+        from t_bdmp_sys_org
+        where org_type = '000300'
+        <if test="userPermissions.isUseUserPermissions">
+            <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.orgPermission"></include>
+        </if>
+    </select>
+
+    <select id="getWay" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select waysection_id as id,waysection_name as name,waysection_s_name as shortName,manage_id as parent_id,sort,'2' as nodeType
+        from t_bdmp_assets_waysection
+        where manage_id in
+        <foreach collection="orgNodeList" item="node" open="(" separator="," close=")">
+            #{node.id}
+        </foreach>
+        <if test="userPermissions.isUseUserPermissions">
+            <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.assertPermissions"></include>
+        </if>
+    </select>
+
+    <select id="getFac" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select facilities_id as id,facilities_name as name,facilities_name as shortName,waysection_id as parent_id,sort,'3' as nodeType,facilities_type as type
+        from t_bdmp_assets_facilities
+        where waysection_id in
+        <foreach collection="wayNodeList" item="node" open="(" separator="," close=")">
+            #{node.id}
+        </foreach>
+        <if test="userPermissions.isUseUserPermissions">
+            <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.assertPermissions"></include>
+        </if>
+        and (parent_id is null or parent_id = '')
+    </select>
+
+    <select id="getAllOrg" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,
+        if((parent_id is null or parent_id = ''),0,parent_id) as parentId,
+        if((sort is null or sort = ''),0,sort) sort,
+        org_type as type
+        from t_bdmp_sys_org
+        <where>
+            <if test="null != orgTreeBo.codes">
+                and org_type in
+                <foreach collection="orgTreeBo.codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.orgPermission"></include>
+            </if>
+        </where>
+    </select>
+
+    <!--获取子节点-->
+    <select id="getChildren" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,
+               if((parent_id is null or parent_id = ''),0,parent_id) as parentId,
+               if((sort is null or sort = ''),0,sort) sort,
+               org_type as type
+        from t_bdmp_sys_org
+        where parent_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!--查找当前节点-->
+    <select id="getNodeById" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,
+        if((parent_id is null or parent_id = ''),0,parent_id) as parentId,
+        if((sort is null or sort = ''),0,sort) sort,
+        org_type as type
+        from t_bdmp_sys_org
+        <where>
+            <if test="null != nodeIds and nodeIds.length > 0">
+                and org_id in
+                <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">
+                    #{nodeId}
+                </foreach>
+            </if>
+            <if test="null != orgTreeBo.codes">
+                and org_type in
+                <foreach collection="orgTreeBo.codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.orgPermission"></include>
+            </if>
+        </where>
+    </select>
+
+    <!--查找父节点-->
+    <select id="getParent" resultType="com.rhy.bdmp.open.modules.common.domain.vo.TreeNode">
+        select org_id as id,org_name as name,org_short_name as shortName,
+        if((parent_id is null or parent_id = ''),0,parent_id) as parentId,
+        if((sort is null or sort = ''),0,sort) sort,
+        org_type as type
+        from t_bdmp_sys_org
+        where org_id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!--组织机构集合-->
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.org.domain.vo.BaseOrgVo">
+        select org.*,dict.name as orgTypeName from t_bdmp_sys_org org
+        inner join t_bdmp_assets_dict dict on org.org_type = dict.code
+        <where>
+            <if test="null != orgListBo.codes">
+                and org.org_type in
+                <foreach collection="orgListBo.codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+
+            <if test="null != orgListBo.search and '' != orgListBo.search">
+                and (
+                    org.org_name like concat('%',#{orgListBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.orgPermission"></include>
+            </if>
+        </where>
+        order by org_type,sort,create_time desc
+    </select>
+
+    <select id="getOrgPage" resultType="com.rhy.bdmp.open.modules.org.domain.vo.BaseOrgVo">
+        select org.*,dict.name as orgTypeName from t_bdmp_sys_org org
+        inner join t_bdmp_assets_dict dict on org.org_type = dict.code
+        <where>
+            <if test="null != orgListBo.codes">
+                and org.org_type in
+                <foreach collection="orgListBo.codes" item="code" open="(" separator="," close=")">
+                    #{code}
+                </foreach>
+            </if>
+
+            <if test="null != orgListBo.search and '' != orgListBo.search">
+                and (
+                org.org_name like concat('%',#{orgListBo.search},'%')
+                )
+            </if>
+            <if test="userPermissions.isUseUserPermissions">
+                <include refid="com.rhy.bdmp.open.modules.common.dao.CommonDao.orgPermission"></include>
+            </if>
+        </where>
+        order by org_type,sort,create_time desc
+    </select>
+
+    <select id="getOrgById" resultType="com.rhy.bdmp.open.modules.org.domain.vo.BaseOrgVo">
+        select org.*,dict.name as orgTypeName from t_bdmp_sys_org org
+        inner join t_bdmp_assets_dict dict on org.org_type = dict.code
+        where org.org_id = #{detailBo.orgId}
+    </select>
+
+    <select id="getIPTelRelationList" resultType="com.rhy.bdmp.open.modules.org.domain.dto.IPTelDto">
+        select if((vp.status is null or vp.status = ''),0,vp.status) as status,
+               vp.rel_toll_station_id as facId,
+               fac.waysection_id as wayId,
+               way.waysection_name as wayName,
+               org.org_id as orgId,
+               org.org_name as orgName,
+               org.org_short_name as orgShortName from t_bdmp_assets_vp_resource vp
+       inner join t_bdmp_assets_facilities fac on vp.rel_toll_station_id = fac.facilities_id
+       inner join t_bdmp_assets_waysection way on way.waysection_id = fac.waysection_id
+       inner join t_bdmp_sys_org org on org.org_id = way.manage_id
+       where node_type = '2'
+       and (rel_toll_station_id is not null and rel_toll_station_id != '')
+       <if test="null != orgId and '' != orgId">
+           and org.org_id = #{orgId}
+       </if>
+       order by org.sort,org.create_time desc
+    </select>
+</mapper>

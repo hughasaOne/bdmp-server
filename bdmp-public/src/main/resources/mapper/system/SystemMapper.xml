@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.system.dao.SystemDao">
+    <!--查询用户菜单，根据权限-->
+    <select id="getUserMenuByPermissions" resultType="com.rhy.bdmp.open.modules.system.domain.vo.ResourceVo">
+        SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = #{appId}
+          AND EXISTS (
+                SELECT
+                    resource_id
+                FROM
+                    t_bdmp_sys_role_resource roleResource
+                WHERE
+                    EXISTS (
+                            SELECT
+                                role_id
+                            FROM
+                                t_bdmp_sys_role role
+                            WHERE
+                                app_id = #{appId}
+                              AND EXISTS ( SELECT role_id FROM t_bdmp_sys_user_role userRole WHERE user_id = #{userId} AND userRole.role_id = role.role_id )
+                              AND roleResource.role_id = role.role_id
+                        )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+    </select>
+
+    <!--查询用户菜单-->
+    <select id="getUserMenu" resultType="com.rhy.bdmp.open.modules.system.domain.vo.ResourceVo">
+        SELECT
+            resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time
+        FROM
+            t_bdmp_sys_resource resource
+        WHERE
+            app_id = #{appId}
+    </select>
+
+    <!--组织列表-->
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.system.domain.vo.OrgVo">
+        select org_id,org_name,org_code,org_short_name,parent_id,org_type,description,node_id,ifnull(sort,0) sort
+        from t_bdmp_sys_org
+    </select>
+
+    <!--用户列表-->
+    <select id="getUserList" resultType="com.rhy.bdmp.open.modules.system.domain.vo.UserVo">
+        select user_id,username,nick_name,app_id,user_type,org_id,sex,phone,email,avatar,default_url
+        from t_bdmp_sys_user where datastatusid = 1 and (org_id is not null and org_id != '')
+    </select>
+    <select id="getOrgById" resultType="com.rhy.bdmp.open.modules.system.domain.vo.OrgVo">
+        select * from t_bdmp_sys_org where org_id = #{orgId}
+    </select>
+</mapper>

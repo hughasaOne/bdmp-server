@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.device.dao.CategoryDao">
+    <select id="getCategoryList" resultType="com.rhy.bdmp.open.modules.device.domain.vo.DeviceCategoryVo">
+        select * from t_bdmp_assets_device_category
+        where parent_id = #{deviceCategoryBo.topicId}
+          and node_type = 4
+    </select>
+
+    <select id="getCategoryDetail" resultType="com.rhy.bdmp.open.modules.device.domain.vo.DeviceCategoryVo">
+        select * from t_bdmp_assets_device_category
+        where id = #{categoryBo.categoryId}
+          and node_type = 4
+    </select>
+</mapper>

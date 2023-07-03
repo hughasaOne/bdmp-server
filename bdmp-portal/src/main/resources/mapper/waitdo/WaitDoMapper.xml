@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.portal.modules.waitdo.dao.WaitDoDao">
+
+    <select id="findUserAppByUserId" resultType="com.rhy.bdmp.base.modules.sys.domain.po.App">
+        select * from t_bdmp_sys_app a
+        where a.datastatusid='1'
+        and exists(
+          select ua.app_id from t_bdmp_sys_user_app ua where ua.user_id = #{userId}
+          and a.app_id = ua.app_id
+        )
+        <if test='null != appIds and 0 &lt; appIds.size'>
+        and a.app_id in
+        <foreach item='appId' index='index' collection='appIds' separator=',' open='(' close=')'>
+            <trim>
+                #{appId}
+            </trim>
+        </foreach>
+        </if>
+        order by a.sort asc, a.create_time desc
+    </select>
+</mapper>

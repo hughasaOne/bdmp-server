@@ -1,0 +1,60 @@
+spring:
+  cloud:
+    #    inetutils:
+    #      # 当宿主机有多个 IP 时，指定注册到注册中心的 IP
+    #      preferred-networks: 192.168.7.12:8848
+    nacos:
+      discovery:
+        # 默认为 true，不想使用 Nacos 作为注册中心可以设为 false
+        enabled: true
+        # 注册中心服务端地址
+        server-addr: 127.0.0.1:8848
+        #server-addr: 172.16.10.100:8848
+        # 名称空间
+        # 测试
+        #        namespace: 043d1adb-e57f-4ce6-8481-e941e52955ff
+        # 公司环境
+        namespace: 7a1d058e-62e6-4c03-ba3c-36138e04fccb
+        #namespace: 857d3f95-2c0b-44b9-ac0b-b9334613a23b
+      config:
+        # 配置文件后缀
+        file-extension: yaml
+        # 配置中心服务端 IP
+        server-addr: 127.0.0.1:8848
+        #server-addr: 172.16.10.100:8848
+
+
+        # 分组
+        group: COMMON_GROUP
+        # 名称空间
+        namespace: 7a1d058e-62e6-4c03-ba3c-36138e04fccb
+        #namespace: 857d3f95-2c0b-44b9-ac0b-b9334613a23b
+        # 公共配置文件
+        extension-configs:
+          # 配置文件名称
+          - dataId: application-mysql.yaml
+            # 分组
+            group: COMMON_GROUP
+            # 名称空间
+            namespace: 7a1d058e-62e6-4c03-ba3c-36138e04fccb
+            #namespace: 857d3f95-2c0b-44b9-ac0b-b9334613a23b
+            # 自动刷新配置
+            refresh: true
+          # 配置文件名称
+          - dataId: application-redis.yaml
+            # 分组
+            group: COMMON_GROUP
+            # 名称空间
+            namespace: 7a1d058e-62e6-4c03-ba3c-36138e04fccb
+            #namespace: 857d3f95-2c0b-44b9-ac0b-b9334613a23b
+            # 自动刷新配置
+            refresh: true
+          - dataId: application-skip-url.yaml
+            group: COMMON_GROUP
+            namespace: 7a1d058e-62e6-4c03-ba3c-36138e04fccb
+            #namespace: 857d3f95-2c0b-44b9-ac0b-b9334613a23b
+            refresh: true
+  main:
+    # 允许具有相同名称的 Bean 来覆盖之前的 Bean
+    allow-bean-definition-overriding: true
+

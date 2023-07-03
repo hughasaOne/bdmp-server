@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.system.modules.analysis.dao.UserPermissionsDetailDao">
+    <insert id="setUserRolePermissions">
+        INSERT INTO t_bdmp_sys_user_role (
+            SELECT #{userId},
+                   role_id,
+                   #{createBy},
+                   SYSDATE()
+            FROM t_bdmp_sys_user_role
+            WHERE user_id = #{permissionsId}
+        )
+    </insert>
+    <insert id="setUserAppPermissions">
+        INSERT INTO t_bdmp_sys_user_app (
+            SELECT #{userId},
+                   app_id,
+                   #{createBy},
+                   SYSDATE()
+            FROM t_bdmp_sys_user_app
+            WHERE user_id = #{permissionsId}
+        )
+    </insert>
+    <update id="setUserDataPermissions">
+        INSERT INTO t_bdmp_sys_user_data (
+            SELECT #{userId},
+                   permissions_id,
+                   app_id,
+                   data_type,
+                   #{createBy},
+                   SYSDATE()
+            FROM t_bdmp_sys_user_data
+            WHERE user_id = #{permissionsId}
+              AND data_type = #{dataType}
+        );
+        UPDATE t_bdmp_sys_user u
+        SET data_permissions_level = (SELECT data_permissions_level
+                                      FROM (SELECT data_permissions_level
+                                            FROM t_bdmp_sys_user
+                                            WHERE user_id = #{permissionsId}) temp)
+        WHERE u.user_id = #{userId}
+    </update>
+    <delete id="deleteUserRole">
+        DELETE
+        FROM t_bdmp_sys_user_role
+        WHERE user_id = #{userId}
+    </delete>
+    <delete id="deleteUserApp">
+        DELETE
+        FROM t_bdmp_sys_user_app
+        WHERE user_id = #{userId}
+    </delete>
+    <delete id="deleteUserAppData">
+        DELETE
+        FROM t_bdmp_sys_user_data
+        WHERE user_id = #{userId}
+          AND data_type = #{dataType}
+    </delete>
+
+    <select id="getCompanyUserIdAppData" resultType="java.lang.String">
+        SELECT app.app_name
+        FROM t_bdmp_sys_user_data udata
+                 LEFT JOIN t_bdmp_sys_app app ON app.app_id = udata.permissions_id
+        WHERE user_id = #{userId}
+          AND data_type = 1
+        ORDER BY app.sort
+    </select>
+
+    <select id="getOrgUser" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.UserVo">
+        SELECT u.user_id, u.nick_name, u.org_id
+        FROM t_bdmp_sys_user u
+                 INNER JOIN t_bdmp_sys_org org ON org.org_id = u.org_id
+        WHERE u.org_id = #{orgId}
+        ORDER BY u.sort
+    </select>
+
+
+    <select id="getCompanyUserRecursion" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.UserVo">
+        SELECT u.user_id, u.nick_name, org.org_id
+        FROM (SELECT * FROM t_bdmp_sys_org org WHERE org.parent_id = #{orgId}) org
+                 LEFT JOIN t_bdmp_sys_user u ON org.org_id = u.org_id
+        ORDER BY org.sort, org.org_id, u.sort
+    </select>
+
+    <select id="getUserDataPermissions"
+            resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.UserPermissionsVO">
+        <if test="1 == dataType">
+            SELECT DISTINCT
+            org.org_id AS valueId,
+            org.org_short_name AS valueName
+            FROM
+            t_bdmp_sys_org org
+            WHERE org.org_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+            )
+            ORDER BY org.sort
+        </if>
+        <if test="2 == dataType">
+            SELECT DISTINCT
+            way.waysection_id AS valueId,
+            way.waysection_s_name AS valueName,
+            org.org_short_name AS tempValueName
+            FROM (SELECT waysection_id,waysection_s_name,manage_id,sort
+            FROM t_bdmp_assets_waysection
+            WHERE waysection_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+            )) way
+            INNER JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+            ORDER BY org.sort,way.sort
+        </if>
+        <if test="3 == dataType">
+            select DISTINCT
+            fac.facilities_id AS valueId,
+            fac.facilities_name AS valueName,
+            org.org_short_name AS tempValueName
+            from (select facilities_id,facilities_name,waysection_id,sort from t_bdmp_assets_facilities fac
+            where fac.facilities_id in (
+            select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+            )) fac
+            INNER JOIN t_bdmp_assets_waysection way ON way.waysection_id = fac.waysection_id
+            INNER JOIN t_bdmp_sys_org org ON way.manage_id = org.org_id
+            ORDER BY org.sort,fac.sort
+        </if>
+    </select>
+
+    <select id="getUserMenu"
+            resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.UserPermissionsVO">
+        SELECT DISTINCT resource.resource_id    valueId,
+                        resource.resource_title tempValueName,
+                        app.app_name            valueName
+        FROM t_bdmp_sys_user USER
+	        LEFT JOIN t_bdmp_sys_user_role urole
+        ON USER.user_id = urole.user_id
+            LEFT JOIN t_bdmp_sys_role role ON urole.role_id = role.role_id
+            LEFT JOIN t_bdmp_sys_role_resource rresource ON rresource.role_id = role.role_id
+            LEFT JOIN t_bdmp_sys_resource resource ON rresource.resource_id = resource.resource_id
+            INNER JOIN t_bdmp_sys_app app ON resource.app_id = app.app_id
+        WHERE USER.user_id = #{userId}
+          AND resource.resource_type = '2'
+        ORDER BY app.sort, resource.sort
+    </select>
+    <select id="getUserIdApp"
+            resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.UserPermissionsVO">
+        SELECT app.app_id   valueId,
+               app.app_name valueName,
+               org.org_id
+        FROM t_bdmp_sys_user USER
+             LEFT JOIN t_bdmp_sys_user_app uapp
+        ON USER.user_id = uapp.user_id
+            LEFT JOIN t_bdmp_sys_app app ON app.app_id = uapp.app_id
+            LEFT JOIN t_bdmp_sys_org org ON USER.org_id = org.org_id
+        WHERE USER.user_id = #{userId}
+    </select>
+    <select id="getUserIdOrg" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.OrgVo">
+        SELECT null AS parent_id,
+               org_short_name
+        FROM t_bdmp_sys_org
+        WHERE org_id = #{orgId}
+        UNION
+        SELECT parent_id,
+               org_short_name
+        FROM (
+                 SELECT t1.parent_id,
+                        t1.org_short_name,
+                        IF
+                            (find_in_set(parent_id, @pids) > 0, @pids := concat( @pids, ',', org_id ), 0) AS ischild
+                 FROM (SELECT org_id, parent_id, org_short_name, sort
+                       FROM t_bdmp_sys_org t
+                       ORDER BY parent_id, org_id) t1,
+                      (SELECT @pids := #{orgId}) t2
+                 ORDER BY t1.sort
+             ) t3
+        WHERE ischild != '0';
+    </select>
+
+
+    <select id="getUser" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.UserPermissionsVO">
+        SELECT USER.user_id,
+               USER.username,
+               USER.nick_name,
+               USER.data_permissions_level,
+               USER.is_admin,
+               org.org_id,
+               org.org_name
+        FROM t_bdmp_sys_user USER LEFT JOIN t_bdmp_sys_org org
+        ON USER.org_id = org.org_id
+        WHERE
+            USER.user_id = #{userId}
+    </select>
+
+    <select id="getOrgById" resultType="com.rhy.bdmp.system.modules.sys.domain.vo.OrgVo">
+        select org_short_name, parent_id
+        from t_bdmp_sys_org
+        where org_id = #{valueId}
+    </select>
+
+    <select id="getResourceById" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Resource">
+        SELECT resource_title, parent_id
+        FROM t_bdmp_sys_resource
+        where resource_id = #{parentId}
+    </select>
+
+    <select id="selectOrgAll" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.OrgUserVO">
+        SELECT org.org_id         AS id,
+               org.parent_id      AS pid,
+               org.org_short_name AS label,
+               org.sort,
+               FALSE                 isUser
+        FROM t_bdmp_sys_org org
+    </select>
+
+    <select id="selectOrg1" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.OrgUserVO">
+        SELECT id,
+               pid,
+               label,
+               sort,
+               FALSE isUser
+        FROM (
+                 SELECT t1.org_id                                                                         AS id,
+                        t1.parent_id                                                                      AS pid,
+                        t1.org_short_name                                                                 AS label,
+                        t1.sort,
+                        IF
+                            (find_in_set(parent_id, @pids) > 0, @pids := concat( @pids, ',', org_id ), 0) AS ischild
+                 FROM (SELECT org_id, parent_id, org_short_name, sort FROM t_bdmp_sys_org t) t1,
+                      (SELECT @pids := #{orgId}) t2
+             ) t3
+        WHERE ischild != '0'
+    </select>
+
+
+    <select id="selectOrgUser" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.OrgUserVO">
+        SELECT user_id AS id, org_id AS pid, nick_name AS label, sort, TRUE isUser
+        FROM t_bdmp_sys_user
+        where org_id IN
+        <foreach item="orgId" index="index" collection="orgIds" separator="," open="(" close=")">
+            <trim>
+                #{orgId}
+            </trim>
+        </foreach>
+    </select>
+
+    <select id="selectOrg" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.OrgUserVO">
+        SELECT org_id id, org_short_name label
+        FROM t_bdmp_sys_org
+        WHERE org_type = '000300'
+        ORDER BY sort
+    </select>
+
+    <!--获取组织及用户-->
+    <select id="getNodeList" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.OrgUserVO">
+        select user_id                                          id,
+               if((org_id is null or org_id = ''), 'other', org_id) pid,
+               nick_name                                        label,
+               if((sort is null or sort = ''),0,sort) sort,
+               TRUE                                             isUser
+        from t_bdmp_sys_user
+        where (user_id is not null and user_id != '')
+        union all
+        select org_id                                                    id,
+               if((parent_id is null or parent_id = ''), '0', parent_id) pid,
+               org_short_name                                            label,
+               if((sort is null or sort = ''),0,sort) sort,
+               FALSE                                                     isUser
+        from t_bdmp_sys_org org
+        where (org_id is not null and org_id != '')
+        union all
+        select 'other' id, '0' pid, '其他' label, 999 sort, false isUser
+    </select>
+</mapper>

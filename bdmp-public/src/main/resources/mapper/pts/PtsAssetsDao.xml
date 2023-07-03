@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.pts.dao.PtsAssetsDao">
+
+    <!-- 分页查询路段信息 -->
+    <select id="queryPageWaySection" resultType="java.util.HashMap">
+        select waysection_id      as waysectionId,
+               waysection_name    as waysectionName,
+               waysection_s_name  as waysectionSName,
+               waysection_code    as waysectionCode,
+               ori_waynet_id      as oriWaynetId,
+               mileage            as mileage,
+               org.org_id         as orgId,
+               org.org_name       as orgName,
+               org.org_short_name as orgShortName
+        from t_bdmp_assets_waysection waysection
+                 left join t_bdmp_sys_org org on waysection.manage_id = org_id
+    </select>
+
+    <!-- 分页查询服务区：仅查询主表，未关联扩展表 -->
+    <select id="queryPageServiceArea" resultType="java.util.HashMap">
+        select fac.facilities_id            as facilitiesId,
+               fac.facilities_name          as facilitiesName,
+               fac.center_off_no            as centerOffNo,
+               fac.longitude                as longitude,
+               fac.latitude                 as latitude,
+               waysection.waysection_id     as waysectionId,
+               waysection.waysection_name   as waysectionName,
+               waysection.waysection_s_name as waysectionSName
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_waysection waysection
+                           on fac.waysection_id = waysection.waysection_id
+        where fac.facilities_type = '32330800'
+    </select>
+
+    <!-- 分页查询收费站 -->
+    <select id="queryPageTollStation" resultType="java.util.HashMap">
+        select fac.facilities_id                 as facilitiesId,
+               fac.facilities_name               as facilitiesName,
+               fac.center_off_no                 as centerOffNo,
+               fac.longitude                     as longitude,
+               fac.latitude                      as latitude,
+               tollStation.entrance_driveway_num as entranceDrivewayNum,
+               tollStation.exit_driveway_num     as exitDrivewayNum,
+               waysection.waysection_id          as waysectionId,
+               waysection.waysection_name        as waysectionName,
+               waysection.waysection_s_name      as waysectionSName
+        from t_bdmp_assets_facilities fac
+                 left join t_bdmp_assets_facilities_toll_station tollStation
+                           on fac.facilities_id = tollStation.facilities_id
+                 left join t_bdmp_assets_waysection waysection
+                           on fac.waysection_id = waysection.waysection_id
+        where fac.facilities_type = '32330200'
+    </select>
+</mapper>

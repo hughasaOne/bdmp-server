@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.ManufacturerDao">
+
+    <!--查询用户所属厂商-->
+    <select id="getUserManufacturer" resultType="java.lang.String">
+        select user.org_id
+        from t_bdmp_sys_user user
+        inner join (select org_id from t_bdmp_sys_org
+            where org_type = '000900'
+            and (parent_id is not null and parent_id != ''))org
+        on user.org_id = org.org_id
+        where user.user_id = #{userId}
+    </select>
+
+    <!--集团-->
+    <select id="getGroupManufacturer" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Org">
+        select *
+        <if test="isAsync">
+            ,IF((select count(*) from t_bdmp_sys_org where parent_id = org.org_id )>0,0,1) as isLeaf
+        </if>
+        from t_bdmp_sys_org org
+        where org_type = '000200'
+        and org_id in (
+            select parent_id from t_bdmp_sys_org
+            where org_id in (
+                select manage_id from t_bdmp_assets_waysection
+                where waysection_id in(
+                    select waysection_id from t_bdmp_assets_facilities
+                    where facilities_id in (
+                        select facilities_id from t_bdmp_assets_device
+                        where manufacturer_id = #{manufacturerId}
+                    )
+                )
+            )
+            group by parent_id
+        )
+        <if test=" 'group' == nodeType">
+            and org_id = #{orgId}
+        </if>
+        <if test=" 'org' == nodeType">
+            and org_id = (
+                select parent_id from t_bdmp_sys_org
+                where org_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and org_id in (
+                select parent_id from t_bdmp_sys_org
+                where org_id = (
+                    select manage_id from t_bdmp_assets_waysection
+                    where waysection_id = #{orgId}
+                )
+            )
+        </if>
+        <if test=" 'fac' == nodeType">
+            and org_id in (
+                select parent_id from t_bdmp_sys_org
+                where org_id in (
+                    select manage_id from t_bdmp_assets_waysection
+                    where waysection_id = (
+                        select waysection_id from t_bdmp_assets_facilities
+                        where facilities_id = #{orgId}
+                    )
+                )
+                group by parent_id
+            )
+        </if>
+        order by sort asc, create_time desc
+    </select>
+
+    <!--公司-->
+    <select id="getOrgManufacturer" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Org">
+        select *
+        <if test="isAsync">
+            ,IF((select count(*) from t_bdmp_assets_waysection where manage_id=org.org_id )>0,0,1) as isLeaf
+        </if>
+        from t_bdmp_sys_org org
+        where org_type = '000300'
+        and org_id in (
+            select manage_id from t_bdmp_assets_waysection
+            where waysection_id in (
+                select waysection_id from t_bdmp_assets_facilities
+                where facilities_id in (
+                    select facilities_id from t_bdmp_assets_device
+                    where manufacturer_id = #{manufacturerId}
+                )
+            )
+        )
+        <if test=" 'group' == nodeType">
+            and parent_id = #{orgId}
+        </if>
+        <if test=" 'org' == nodeType">
+            and org_id = #{orgId}
+        </if>
+        <if test=" 'way' == nodeType">
+            and org_id = (
+                select manage_id from t_bdmp_assets_waysection
+                where waysection_id = #{orgId}
+            )
+        </if>
+        <if test=" 'fac' == nodeType">
+            and org_id = (
+                select manage_id from t_bdmp_assets_waysection
+                where waysection_id = (
+                    select waysection_id from t_bdmp_assets_facilities
+                    where facilities_id = #{orgId}
+                )
+            )
+        </if>
+        order by sort asc, create_time desc
+    </select>
+
+    <!--路段-->
+    <select id="getWayManufacturer" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Waysection">
+        select
+            way.waysection_id,
+            way.waysection_name,
+            way.waysection_s_name,
+            way.manage_id,
+            way.waynet_id,
+            way.ori_waynet_id,
+            way.node_id,
+            way.district_ids,
+            way.mileage,
+            way.waysection_code
+        <if test="isAsync">
+            ,IF((select count(*) from t_bdmp_assets_facilities where waysection_id=way.waysection_id )>0,0,1) as isLeaf
+        </if>
+        from t_bdmp_assets_waysection way
+        <where>
+            and waysection_id in (
+                select waysection_id from t_bdmp_assets_facilities
+                where facilities_id in (
+                    select facilities_id from t_bdmp_assets_device
+                    where manufacturer_id = #{manufacturerId}
+                )
+            )
+            <if test=" 'group' == nodeType">
+                and manage_id in (
+                    select org_id from t_bdmp_sys_org where parent_id = #{orgId}
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and manage_id = #{orgId}
+            </if>
+            <if test=" 'way' == nodeType">
+                and waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and waysection_id = (
+                    select waysection_id from t_bdmp_assets_facilities
+                    where facilities_id = #{orgId}
+                )
+            </if>
+        </where>
+        order by sort asc, create_time desc
+    </select>
+
+    <!--一级设施-->
+    <select id="getFacManufacturer" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Facilities">
+        select
+        fac.facilities_id,
+        fac.facilities_name,
+        fac.waysection_id,
+        fac.longitude,
+        fac.latitude,
+        fac.is_monitor as isMonitor,
+        fac.map_url as mapUrl,
+        fac.status as status,
+        fac.facilities_id_old,
+        fac.facilities_code,
+        ( case when ( 0  &lt;  locate( '323307', fac.facilities_type )) then '32330700' else fac.facilities_type end ) as facilities_type
+        <if test="isAsync">
+            ,IF((select count(*) from t_bdmp_assets_facilities c_fac where c_fac.parent_id=fac.facilities_id )>0,0,1) as isLeaf
+        </if>
+        from t_bdmp_assets_facilities fac
+        where (fac.parent_id is null or fac.parent_id = '')
+        and fac.facilities_id in (
+            select facilities_id from t_bdmp_assets_device
+            where manufacturer_id = #{manufacturerId}
+        )
+        <if test="null != facilitiesTypes and facilitiesTypes.size() > 0">
+            and fac.facilities_type in
+            <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+                <trim>
+                    #{facilitiesType}
+                </trim>
+            </foreach>
+        </if>
+        <if test=" 'group' == nodeType">
+            and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id in (
+                    select c_org.org_id from t_bdmp_sys_org c_org where c_org.parent_id = #{orgId} and org_type='000300'
+                )
+            )
+        </if>
+        <if test=" 'org' == nodeType">
+            and fac.waysection_id in (
+                select way.waysection_id from t_bdmp_assets_waysection way where way.manage_id = #{orgId}
+            )
+        </if>
+        <if test=" 'way' == nodeType">
+            and fac.waysection_id = #{orgId}
+        </if>
+        <if test=" 'fac' == nodeType">
+            and fac.facilities_id = #{orgId}
+        </if>
+        order by sort asc, create_time desc
+    </select>
+
+    <!--二级设施-->
+    <select id="getSubFacManufacturerTree" resultType="com.rhy.bdmp.open.modules.assets.domain.po.Facilities">
+        select facilities_id,facilities_name,parent_id,waysection_id,facilities_type,facilities_code
+        <if test="isAsync">
+            ,true as isLeaf
+        </if>
+        from t_bdmp_assets_facilities
+        <where>
+            and facilities_id in (
+                select facilities_id from t_bdmp_assets_facilities
+                where facilities_id in (
+                    select facilities_id from t_bdmp_assets_device
+                    where manufacturer_id = #{manufacturerId}
+                )
+                and (parent_id is not null and parent_id != '')
+            )
+            <if test="null != facilitiesTypes and facilitiesTypes.size() > 0">
+                and facilities_type IN
+                <foreach item="facilitiesType" index="index" collection="facilitiesTypes" separator="," open="(" close=")">
+                    <trim>
+                        #{facilitiesType}
+                    </trim>
+                </foreach>
+            </if>
+            <if test=" 'group' == nodeType">
+                and waysection_id in (
+                    select waysection_id from t_bdmp_assets_waysection where manage_id in (
+                        select org_id from t_bdmp_sys_org where parent_id = #{orgId} and org_type='000300'
+                    )
+                )
+            </if>
+            <if test=" 'org' == nodeType">
+                and waysection_id in (
+                    select waysection_id from t_bdmp_assets_waysection where manage_id = #{orgId}
+                )
+            </if>
+            <if test=" 'way' == nodeType">
+                and waysection_id = #{orgId}
+            </if>
+            <if test=" 'fac' == nodeType">
+                and parent_id = #{orgId}
+            </if>
+        </where>
+        order by sort asc, create_time desc
+    </select>
+
+</mapper>

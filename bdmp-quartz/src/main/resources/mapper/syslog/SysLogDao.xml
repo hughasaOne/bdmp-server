@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.quartz.modules.syslog.dao.SysLogDao">
+    <delete id="cleanLogByDate">
+        delete from t_bdmp_quartz_sys_log where create_time &lt;= #{timed}
+    </delete>
+
+    <select id="selectPage" resultType="com.rhy.bdmp.quartz.modules.syslog.domain.bo.SysLogExt">
+        SELECT
+        app.app_id,
+        qsl.sys_log_id,
+        qsl.sys_job_id,
+        qsl.start_time,
+        qsl.execute_time,
+        qsl.execute_status,
+        qsl.execute_result,
+        qsl.end_time,
+        qsl.create_time,
+        qsj.job_name jobName,
+        qjd.description
+        FROM quartz.t_bdmp_quartz_sys_log qsl
+        left join quartz.t_bdmp_quartz_sys_job qsj on qsl.sys_job_id=qsj.sys_job_id
+        left join basedata.t_bdmp_sys_app app on qsj.app_id = app.app_id
+        left join quartz.T_BDMP_QUARTZ_JOB_DETAILS qjd on qjd.JOB_NAME = qsj.job_name
+        <where>
+            <if test="sysLog.jobName!= null and sysLog.jobName!=''">
+                <bind name="jobNameLike" value="'%'+sysLog.jobName+'%'"/>
+                and qsj.job_name like #{jobNameLike}
+            </if>
+            <if test="sysLog.executeStatus!= null and sysLog.executeStatus!=''">
+                and qsl.execute_status = #{sysLog.executeStatus}
+            </if>
+            <if test="sysLog.dirId!= null and sysLog.dirId!=''">
+                and (qsj.app_id = #{sysLog.dirId} or qsj.sys_business_id = #{sysLog.dirId})
+            </if>
+            <if test="sysLog.startTime!=null">
+                and qsl.start_time &gt;= #{sysLog.startTime}
+            </if>
+            <if test="sysLog.endTime!=null">
+                and qsl.start_time &lt;= #{sysLog.endTime}
+            </if>
+            <if test="sysLog.startTime==null and sysLog.endTime==null">
+                and date_sub(curdate(), interval 7 day) &lt;= date(qsl.start_time)
+            </if>
+            <if test="!isAdmin">
+                and app.app_id IN (
+                SELECT permissions_id FROM basedata.t_bdmp_sys_user_data
+                WHERE user_id = #{userId} AND data_type = 1 )
+            </if>
+        </where>
+        order by qsl.create_time desc
+
+    </select>
+</mapper>

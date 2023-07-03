@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DeviceBoxDao">
+
+    <!--查询出基础数据平台没有的box，做新增-->
+    <select id="getDiffBox" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.BoxVo">
+        select c.dev_id,
+               c.sn,
+               c.rom,
+               c.scm,
+               c.reclosing,
+               c.dev_name,
+               c.bord_ip,
+               c.manufacturer,
+               c.tel,
+               c.link_type,
+               c.air_switch_version,
+               c.sort,
+               c.datastatusid,
+               c.create_time,
+               c.create_by,
+               c.update_time,
+               c.update_by,
+               am.lat,
+               am.lon
+        from aibox.t_aibox_devinfo c
+                 left join aibox.t_aibox_monitor am
+                           on c.sn = am.sn
+        where not exists
+            (
+                select box.sn from t_bdmp_assets_device_box box where box.sn = c.sn
+            )
+    </select>
+
+    <!--查询出基础数据平台和box系统都有的box，做更新-->
+    <select id="getSameBox" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.BoxVo">
+        select c.dev_id,
+               c.sn,
+               c.rom,
+               c.scm,
+               c.reclosing,
+               c.dev_name,
+               c.bord_ip,
+               c.manufacturer,
+               c.tel,
+               c.link_type,
+               c.air_switch_version,
+               c.sort,
+               c.datastatusid,
+               c.create_time,
+               c.create_by,
+               c.update_time,
+               c.update_by,
+               am.lat,
+               am.lon
+        from aibox.t_aibox_devinfo c
+                 left join aibox.t_aibox_monitor am
+                           on am.sn = c.sn
+        where exists(
+                      select box.sn, box.update_time
+                      from t_bdmp_assets_device_box box
+                      where c.sn = box.sn
+                        and c.update_time > box.update_time
+                  )
+    </select>
+
+
+</mapper>

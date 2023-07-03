@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.assets.dao.OrgDao">
+
+    <!--根据组织类型查询组织-->
+    <select id="getOrgList" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.OrgVo">
+        select *
+        from t_bdmp_sys_org
+        where org_type in
+        <foreach collection="orgTypes" item="orgType" separator="," open="(" close=")">
+            #{orgType}
+        </foreach>
+    </select>
+
+    <!--根据orgId查询org-->
+    <select id="getOrgInfoById" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.OrgVo">
+        select * from t_bdmp_sys_org
+        where org_id = #{orgId}
+    </select>
+    <select id="getOrgInfoByParentId" resultType="com.rhy.bdmp.open.modules.assets.domain.vo.OrgTreeVo">
+        select * from t_bdmp_sys_org
+        where parent_id = #{parentId}
+    </select>
+</mapper>

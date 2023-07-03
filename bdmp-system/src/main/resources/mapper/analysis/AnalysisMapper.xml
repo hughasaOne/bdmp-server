@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.system.modules.analysis.dao.AnalysisDao">
+    <!--系统资源：统计运营公司总个数,统计接入系统应用总个数,统计系统用户总数-->
+    <select id="statSysResourcesNum" resultType="java.util.HashMap">
+        SELECT
+        (SELECT COUNT(org_id) FROM t_bdmp_sys_org WHERE org_type='000300') sumOperationOrg,
+        (SELECT COUNT(org_id) FROM t_bdmp_sys_org WHERE org_type='000500') sumCenterControlOrg,
+        (SELECT COUNT(app_id) FROM t_bdmp_sys_app WHERE datastatusid = '1') sumApp,
+        (
+        SELECT COUNT(user_id)
+        FROM t_bdmp_sys_user u
+        INNER JOIN t_bdmp_sys_app a
+        ON u.app_id = a.app_id and (a.datastatusid is null or a.datastatusid!='0')
+        WHERE (u.datastatusid is null or u.datastatusid!='0')
+        )sumUser
+    </select>
+
+    <!--台账资源：运营公司总个数、路段总个数、里程数、设备总数,收费站、服务区、桥梁、隧道、互通立交、门架）-->
+    <select id="countAssetsSum" resultType="java.util.HashMap">
+        select
+        (select count(*) from t_bdmp_sys_org where org_type='000300') sumOperationOrg,
+
+        (select count(*) from t_bdmp_assets_waysection aw
+         where exists
+                   (
+                       select org_id from t_bdmp_sys_org so where so.org_id = aw.manage_id and org_type='000300'
+                   )
+        ) sumWaySection,
+
+        (select sum(mileage) from t_bdmp_assets_waysection aw
+         where exists
+                   (
+                       select org_id from t_bdmp_sys_org so where so.org_id = aw.manage_id and org_type='000300'
+                   )
+        ) sumMileage,
+
+        (select count(ad.device_id) from t_bdmp_assets_device ad
+                                             left join t_bdmp_assets_waysection aw
+                                                       on ad.waysection_id = aw.waysection_id
+                                             left join t_bdmp_sys_org so
+                                                       on so.org_id = aw.manage_id and so.org_type='000300'
+        ) sumDevice,
+
+        (
+            select count(*) from t_bdmp_assets_facilities af
+            left join t_bdmp_assets_waysection aw
+            on af.waysection_id = aw.waysection_id
+            left join t_bdmp_sys_org so
+            on so.org_id = aw.manage_id and so.org_type='000300'
+            where (af.parent_id is null or af.parent_id = '')
+            and facilities_type in('32330100','32330200','32330400','32330500','32330600','32330800','32330700','32330711','32330712')
+        )sumFacilities
+    </select>
+
+    <!--查询运营公司-->
+    <select id="getOperatingCompanys" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Org">
+        SELECT org_id,org_name FROM t_bdmp_sys_org WHERE org_type = '000300'
+    </select>
+
+    <!--查询所有机构-->
+    <select id="getAllOrgs" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Org">
+        SELECT org_id,org_name FROM t_bdmp_sys_org
+    </select>
+
+    <!--查询运营公司及以下机构的路段数和里程数-->
+    <select id="sumWaySectionAndMileage" resultType="map">
+        select
+        tbso.org_id orgId,tbso.org_name orgName,if(temp.sumMileage is null,0,temp.sumMileage) sumMileage,if(temp.sumWaysection is null,0,temp.sumWaysection) sumWaysection from t_bdmp_sys_org tbso
+        left join
+        (
+            select aw.manage_id as operationId,count(*) sumWaysection,if(sum(aw.mileage) is null,0,sum(aw.mileage)) sumMileage from t_bdmp_assets_waysection aw
+            where exists
+                      (
+                          select org_id,org_name,org_type
+                          from t_bdmp_sys_org so where so.org_id = aw.manage_id
+                      )
+            group by aw.manage_id
+        )temp
+        on tbso.org_id = temp.operationId
+        where tbso.org_type = '000300'
+    </select>
+
+    <!--查询运营公司及其以下机构的重点设施数-->
+    <select id="sumKeyFacilitiesByOrgId" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.RanKOperatingCompanyVO">
+         select
+         #{orgId} orgId,
+        (select org_name from t_bdmp_sys_org where org_id = #{orgId}) as orgName,
+        count(facilities_id) as num,
+         if(f.facilities_type is null or f.facilities_type = '',0,f.facilities_type) as rankType
+        from t_bdmp_assets_facilities f where exists (
+         select w.waysection_id from t_bdmp_assets_waysection w where  w.manage_id =#{orgId}
+         and w.waysection_id = f.waysection_id
+         ) and (f.parent_id is null or f.parent_id = '')
+         group by f.facilities_type
+    </select>
+
+    <!--查询运营公司及其以下机构的与设备关联的系统code-->
+    <select id="countDeviceByOrgId" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.RanKOperatingCompanyVO">
+        select
+        #{orgId} as orgId,
+        (select g.org_name orgName from t_bdmp_sys_org g where g.org_id = #{orgId}) as orgName,
+        count(dict.dict_id) num,#{flag} as rankType
+        from
+         (
+         SELECT
+         t.dict_id,t.name,t.code
+         FROM
+         (
+         SELECT
+         a.id,
+         IF
+         ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+         FROM
+         ( SELECT dict_id AS id, parent_id AS pid FROM t_bdmp_assets_dict ) a,
+         ( SELECT @pids := (select dict_id from t_bdmp_assets_dict adi where adi.code = #{flag})) vars
+         ) b
+         JOIN t_bdmp_assets_dict t ON b.id = t.dict_id
+         WHERE
+         (b.ischild != '0' or t.dict_id= (select dict_id from t_bdmp_assets_dict adi where adi.code = #{flag}))
+         )dict
+         inner join t_bdmp_assets_device ad
+         on ad.system_id = dict.code
+         inner join t_bdmp_assets_facilities tbaf
+         on ad.facilities_id = tbaf.facilities_id
+         inner join t_bdmp_assets_waysection tbaw
+         on tbaf.waysection_id = tbaw.waysection_id
+         where tbaw.manage_id = #{orgId}
+    </select>
+
+    <!--人员系统应用分布统计-->
+    <select id="statUserOfApp" resultType="java.util.HashMap">
+        select a.app_id appId,a.app_name appName,if(b.userNum is null,0,b.userNum) as userNum from t_bdmp_sys_app a left join
+        (select count(user_id) as userNum,app_id from t_bdmp_sys_user
+        where (datastatusid is null or  datastatusid!='0')
+        group by app_id) b on a.app_id = b.app_id
+        where a.datastatusid='1'
+    </select>
+    <!--<select id="countUserDistributionApp" resultType="map">
+        SELECT sa.app_id appId,sa.app_name appName,COUNT(su.user_id) sumUser FROM t_bdmp_sys_user su
+        INNER JOIN t_bdmp_sys_app sa
+        ON su.app_id = sa.app_id
+        WHERE su.datastatusid is null or su.datastatusid!='0'
+        GROUP BY appName
+    </select>-->
+
+    <!--组织机构图-->
+    <select id="sumUserByOrgId" resultType="java.util.HashMap">
+        SELECT bso.org_id orgId,bso.org_short_name orgName,bso.parent_id parentId,bso.org_type,
+        (
+        SELECT COUNT(orgId) totalUser
+        FROM (SELECT t.org_id orgId,
+             t.org_name,
+             t.parent_id
+        FROM (
+               SELECT a.id,
+                      IF
+                          (find_in_set(pid, @pids) > 0, @pids := concat(@pids, ',', id), 0) AS ischild
+               FROM (SELECT org_id AS id, parent_id AS pid FROM t_bdmp_sys_org) a,
+                    (SELECT @pids := #{orgId}) vars
+           ) b
+               JOIN t_bdmp_sys_org t ON b.id = t.org_id
+        WHERE (b.ischild != '0'
+         or t.org_id = #{orgId})
+         ) org
+         INNER JOIN t_bdmp_sys_user su
+                    ON su.org_id = org.orgId
+                    WHERE  (su.datastatusid is null or  su.datastatusid != '0')) totalUser
+        FROM t_bdmp_sys_org bso WHERE bso.org_id = #{orgId}
+    </select>
+
+    <!--获取系统类型-->
+    <select id="getSysType" resultType="java.util.HashMap">
+        select dict_id as dictId,name,code from t_bdmp_assets_dict where parent_id = (select dict_id from t_bdmp_assets_dict where code = '11XXXX')
+    </select>
+
+    <select id="deviceStatByOrg" resultType="com.rhy.bdmp.system.modules.analysis.domain.vo.RanKOperatingCompanyVO">
+        select
+            org.org_id as orgId,
+            org.org_name as orgName,
+            count(*) as num
+        FROM (
+            select * from t_bdmp_assets_device
+            <where>
+                system_id IN
+                <foreach item="systemId" index="index" collection="systemIds" separator="," open="(" close=")">
+                    <trim>
+                        #{systemId}
+                    </trim>
+                </foreach>
+            </where>
+            ) as device
+            left join t_bdmp_assets_facilities fac on device.facilities_id = fac.facilities_id
+            left join t_bdmp_assets_waysection way on fac.waysection_id = way.waysection_id
+            left JOIN t_bdmp_sys_org org on way.manage_id = org.org_id
+        where (org.org_id is not null and org.org_id &lt;&gt; '')
+        group by org.org_id
+        order by num desc
+    </select>
+
+    <!--获取机构下的用户-->
+    <select id="getOrgSubUserList" resultType="java.util.Map">
+        select org.org_id                                                            orgId,
+               if((userNum is null or userNum = ''), 0, userNum)                     totalUser,
+               org.org_short_name                                                    orgName,
+               if((org.parent_id is null or org.parent_id = ''), '0', org.parent_id) parentId,
+               org_type                                                              org_type,
+               if((org.sort is null or org.sort = ''), 0, org.sort)                  sort
+        from t_bdmp_sys_org org
+                 left join (select user.org_id, count(*) userNum
+                            from t_bdmp_sys_user user
+                            where user.app_id = '1'
+                            group by user.org_id
+        ) temp
+                           on temp.org_id = org.org_id
+    </select>
+
+</mapper>

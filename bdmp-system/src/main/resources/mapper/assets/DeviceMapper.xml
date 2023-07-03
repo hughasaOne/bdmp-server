@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.DeviceDao">
+
+    <!--删除设备时，同时删除相关扩展表信息-->
+    <delete id="deleteDeviceExtTable">
+        <foreach item="item" index="index" collection="mapList" separator=";">
+            delete from ${item.tableName} where device_id = #{item.deviceId}
+        </foreach>
+    </delete>
+
+    <!--查询设备（分页）-->
+    <select id="queryPage" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.DeviceGridVo">
+        select
+        temp.device_id,
+        temp.seria_number,
+        temp.device_name,
+        temp.device_code,
+        temp.ip,
+        temp.device_type,
+        temp.direction,
+        temp.longitude,
+        temp.latitude,
+        temp.update_time,
+        temp.facilitiesName,
+        temp.facilitiesId,
+        temp.center_off_no,
+        temp.location,
+        (select dict.name from t_bdmp_assets_dict dict where dict.`code`= temp.device_type ) deviceTypeName,
+        (select system_dict.system_name from t_bdmp_assets_dict_system system_dict where system_dict.system_id = temp.system_id) systemName
+        from (select d.*,
+        fac.facilities_name facilitiesName,
+        fac.facilities_id facilitiesId,
+        way.waysection_id waysectionId,
+        way.manage_id,
+        fac.parent_id
+        from t_bdmp_assets_device d,t_bdmp_assets_facilities fac,t_bdmp_assets_waysection way
+        where d.waysection_id = way.waysection_id and d.facilities_id = fac.facilities_id
+        ) temp
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and temp.manage_id in (select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and temp.waysectionId in (select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and (temp.facilities_id in (select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                     or temp.parent_id in (select o.permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'))
+                </if>
+            </if>
+            <if test="'org' == nodeType">
+                and temp.manage_id = #{nodeId}
+            </if>
+            <if test="'way' == nodeType">
+                and temp.waysectionId = #{nodeId}
+            </if>
+            <if test="'fac' == nodeType">
+                and (temp.facilities_id = #{nodeId} or temp.parent_id = #{nodeId})
+            </if>
+            <if test="'other' == nodeId">
+                and (temp.facilities_id is null or temp.facilities_id = '')
+            </if>
+            <if test="null != deviceType and '' != deviceType">
+                and temp.device_type = #{deviceType}
+            </if>
+            <if test=" systemIds != null and systemIds.size() > 0 ">
+                and temp.system_id in
+                <foreach item="systemId" index="index" collection="systemIds" separator="," open="(" close=")">
+                    <trim>
+                        #{systemId}
+                    </trim>
+                </foreach>
+            </if>
+            <if test="null != deviceName and '' != deviceName">
+                and temp.device_name like concat('%',#{deviceName},'%')
+            </if>
+            <if test="null != deviceCode and '' != deviceCode">
+                and temp.device_code like concat('%',#{deviceCode},'%')
+            </if>
+        </where>
+        order by temp.sort asc,temp.create_time desc
+    </select>
+
+    <select id="getUserById" resultType="com.rhy.bdmp.system.modules.assets.domain.po.User">
+        select * from t_bdmp_sys_user where user_id = #{userId}
+    </select>
+
+    <select id="findManageDepartment" resultType="com.rhy.bdmp.base.modules.sys.domain.po.Org">
+        SELECT
+	        t.*
+        FROM
+	        (  SELECT
+                a.id,
+                IF
+                ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+                FROM
+                ( SELECT org_id AS id, parent_id AS pid FROM t_bdmp_sys_org ) a,
+                (
+                    SELECT
+                    @pids :=
+                    ( SELECT way.manage_id
+                    FROM t_bdmp_assets_facilities f, t_bdmp_assets_waysection way
+                    WHERE f.facilities_id = #{facilitiesId} AND way.waysection_id = f.waysection_id )
+                ) vars
+	        ) b
+	    JOIN t_bdmp_sys_org t ON b.id = t.org_id
+        WHERE
+	    b.ischild != '0'
+	    OR t.org_id = ( SELECT way.manage_id
+	                    FROM t_bdmp_assets_facilities f, t_bdmp_assets_waysection way
+	                    WHERE f.facilities_id = #{facilitiesId} AND way.waysection_id = f.waysection_id )
+    </select>
+
+    <!--查询没有设施Id的设备-->
+    <select id="getDeviceNoFacId" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.DeviceGridVo">
+        SELECT tbad.*,tbad1.name deviceTypeName FROM t_bdmp_assets_device tbad
+        INNER JOIN t_bdmp_assets_dict tbad1
+        ON tbad.device_type = tbad1.code
+        WHERE NOT EXISTS
+            (SELECT * FROM t_bdmp_assets_facilities tbaf WHERE tbad.facilities_id = tbaf.facilities_id)
+    </select>
+
+    <!--查询刚同步的终端箱-->
+    <select id="getCurSynBox" resultType="com.rhy.bdmp.base.modules.assets.domain.po.Device">
+        select * from t_bdmp_assets_device device
+        inner join (
+        select ip from t_bdmp_assets_device a
+        where a.device_type = "130700"
+        group by ip having count(ip) = 1
+        ) temp
+        on device.ip = temp.ip
+        and TIMESTAMPDIFF(SECOND, device.update_time ,NOW()) &lt;= 120
+    </select>
+
+</mapper>

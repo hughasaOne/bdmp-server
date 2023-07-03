@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rhy.bdmp.portal.modules.sso.dao.SSOClientDao">
+
+    <!-- 根据用户ID，应用ID查询用户映射信息 -->
+    <select id="queryUserMappingByUserId" resultType="com.rhy.bdmp.portal.modules.sso.domain.AppUserVO">
+        SELECT
+            a.app_id AS appId,
+            a.app_user_id AS appUserId,
+            b.username AS appUserName,
+            b.nick_name AS nikeNmae,
+            b.phone,
+            b.email
+        FROM
+            t_bdmp_sys_user_mapping a,
+            t_bdmp_sys_user b
+        WHERE
+            a.app_user_id = b.user_id
+            AND a.user_id = #{userId}
+            AND a.app_id =  #{appId}
+    </select>
+
+    <!-- 根据用户ID、应用ID查询数据行数 -->
+    <select id="checkUserPermissions" resultType="int">
+        SELECT
+        count(1)
+        FROM
+        t_bdmp_sys_user_app
+        WHERE
+        user_id = #{userId}
+        AND app_id = #{appId}
+    </select>
+</mapper>

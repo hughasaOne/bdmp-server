@@ -1,0 +1,97 @@
+2023-03-11 09:07:26.341 [com.alibaba.nacos.client.Worker.longPolling.fixed-127.0.0.1_8848-7a1d058e-62e6-4c03-ba3c-36138e04fccb] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public] & group[COMMON_GROUP]
+2023-03-11 09:07:26.345 [com.alibaba.nacos.client.Worker.longPolling.fixed-127.0.0.1_8848-7a1d058e-62e6-4c03-ba3c-36138e04fccb] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public.yaml] & group[COMMON_GROUP]
+2023-03-11 09:07:26.347 [com.alibaba.nacos.client.Worker.longPolling.fixed-127.0.0.1_8848-7a1d058e-62e6-4c03-ba3c-36138e04fccb] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public-jtprod.yaml] & group[COMMON_GROUP]
+2023-03-11 09:09:35.464 [http-nio-60055-exec-3] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 09:13:03.069 [http-nio-60055-exec-5] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 09:13:14.783 [http-nio-60055-exec-6] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:01:03.749 [http-nio-60055-exec-8] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:03:32.102 [Thread-29] WARN  com.alibaba.nacos.client.naming - [NamingHttpClientManager] Start destroying NacosRestTemplate
+2023-03-11 11:03:32.103 [Thread-29] WARN  com.alibaba.nacos.client.naming - [NamingHttpClientManager] Destruction of the end
+2023-03-11 11:03:32.112 [Thread-29] WARN  com.alibaba.nacos.client.naming - [NamingHttpClientManager] Start destroying NacosRestTemplate
+2023-03-11 11:03:32.112 [Thread-29] WARN  com.alibaba.nacos.client.naming - [NamingHttpClientManager] Destruction of the end
+2023-03-11 11:03:34.021 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[null.properties] & group[DEFAULT_GROUP]
+2023-03-11 11:03:35.986 [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataSourcesServiceImpl': Unsatisfied dependency expressed through field 'dataSourcesMapper'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataSourcesMapper' defined in URL [jar:file:/E:/maven/mvnresp/com/jtkj/Common-MultiTenantDB/0.0.1-SNAPSHOT/Common-MultiTenantDB-0.0.1-SNAPSHOT.jar!/com/jtkj/cloud/db/datasources/mapper/DataSourcesMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Unsatisfied dependency expressed through method 'sqlSessionFactory' parameter 0; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'dataSource' defined in class path resource [com/jtkj/cloud/db/datasources/config/DynamicDataSourceConfig.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [com.jtkj.cloud.db.datasources.core.DynamicDataSource]: Factory method 'dynamicDataSource' threw exception; nested exception is java.lang.NullPointerException
+2023-03-11 11:03:44.074 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public] & group[COMMON_GROUP]
+2023-03-11 11:03:44.077 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public.yaml] & group[COMMON_GROUP]
+2023-03-11 11:03:44.080 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public-jtprod.yaml] & group[COMMON_GROUP]
+2023-03-11 11:03:46.118 [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataSourcesServiceImpl': Unsatisfied dependency expressed through field 'dataSourcesMapper'; nested exception is org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'dataSourcesMapper' defined in URL [jar:file:/E:/maven/mvnresp/com/jtkj/Common-MultiTenantDB/0.0.1-SNAPSHOT/Common-MultiTenantDB-0.0.1-SNAPSHOT.jar!/com/jtkj/cloud/db/datasources/mapper/DataSourcesMapper.class]: Unsatisfied dependency expressed through bean property 'sqlSessionFactory'; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'sqlSessionFactory' defined in class path resource [com/baomidou/mybatisplus/autoconfigure/MybatisPlusAutoConfiguration.class]: Bean instantiation via factory method failed; nested exception is org.springframework.beans.BeanInstantiationException: Failed to instantiate [org.apache.ibatis.session.SqlSessionFactory]: Factory method 'sqlSessionFactory' threw exception; nested exception is org.springframework.core.NestedIOException: Failed to parse mapping resource: 'file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\assets\AssetsMapper.xml]'; nested exception is org.apache.ibatis.builder.BuilderException: Error parsing Mapper XML. The XML location is 'file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\assets\AssetsMapper.xml]'. Cause: org.apache.ibatis.builder.BuilderException: Error resolving class. Cause: org.apache.ibatis.type.TypeException: Could not resolve type alias 'com.rhy.bdmp.open.modules.assets.domain.po.Org'.  Cause: java.lang.ClassNotFoundException: Cannot find class: com.rhy.bdmp.open.modules.assets.domain.po.Org
+2023-03-11 11:04:20.409 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public] & group[COMMON_GROUP]
+2023-03-11 11:04:20.411 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public.yaml] & group[COMMON_GROUP]
+2023-03-11 11:04:20.413 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public-jtprod.yaml] & group[COMMON_GROUP]
+2023-03-11 11:04:27.084 [restartedMain] WARN  com.netflix.config.sources.URLConfigurationSource - No URLs will be polled as dynamic configuration sources.
+2023-03-11 11:04:28.940 [restartedMain] WARN  o.s.c.l.c.BlockingLoadBalancerClientAutoConfiguration$BlockingLoadBalancerClientRibbonWarnLogger - You already have RibbonLoadBalancerClient on your classpath. It will be used by default. As Spring Cloud Ribbon is in maintenance mode. We recommend switching to BlockingLoadBalancerClient instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2023-03-11 11:04:47.318 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public] & group[COMMON_GROUP]
+2023-03-11 11:04:47.320 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public.yaml] & group[COMMON_GROUP]
+2023-03-11 11:04:47.323 [restartedMain] WARN  c.a.cloud.nacos.client.NacosPropertySourceBuilder - Ignore the empty nacos configuration and get it based on dataId[bdmp-public-jtprod.yaml] & group[COMMON_GROUP]
+2023-03-11 11:04:57.072 [restartedMain] WARN  com.netflix.config.sources.URLConfigurationSource - No URLs will be polled as dynamic configuration sources.
+2023-03-11 11:04:57.077 [restartedMain] WARN  com.netflix.config.sources.URLConfigurationSource - No URLs will be polled as dynamic configuration sources.
+2023-03-11 11:04:59.229 [restartedMain] WARN  o.s.c.l.c.BlockingLoadBalancerClientAutoConfiguration$BlockingLoadBalancerClientRibbonWarnLogger - You already have RibbonLoadBalancerClient on your classpath. It will be used by default. As Spring Cloud Ribbon is in maintenance mode. We recommend switching to BlockingLoadBalancerClient instead. In order to use it, set the value of `spring.cloud.loadbalancer.ribbon.enabled` to `false` or remove spring-cloud-starter-netflix-ribbon from your project.
+2023-03-11 11:05:49.894 [http-nio-60055-exec-1] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:07:39.752 [http-nio-60055-exec-4] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:08:28.528 [http-nio-60055-exec-3] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:12:01.613 [http-nio-60055-exec-6] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 11:12:54.007 [http-nio-60055-exec-7] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.jdbc.BadSqlGrammarException: 
+### Error querying database.  Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+### The error may exist in file [D:\work\bdmp-server - 副本\bdmp-public\target\classes\mapper\system\SystemMapper.xml]
+### The error may involve defaultParameterMap
+### The error occurred while setting parameters
+### SQL: SELECT             resource_id,resource_title,parent_id,resource_type,app_id,external_link,external_link_url,external_link_open,CACHE,hidden,path,component_name,component_path,icon,permission,description,sort,datastatusid,create_by,create_time,update_by,update_time         FROM             t_bdmp_sys_resource resource         WHERE             app_id = ?
+### Cause: java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist
+; bad SQL grammar []; nested exception is java.sql.SQLSyntaxErrorException: Table 'admin_config_service.t_bdmp_sys_resource' doesn't exist]
+2023-03-11 12:32:48.977 [com.alibaba.nacos.client.naming.updater] WARN  com.alibaba.nacos.client.naming - out of date data received, old-t: 1678509158967, new-t: 0

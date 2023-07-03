@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.portal.modules.newsnotice.dao.NewsNoticeDao">
+
+    <delete id="deleteByCreateDate">
+        delete from  t_portal_news_notice where DATE_FORMAT(create_time,'%Y-%m-%d') = #{currentDate}
+    </delete>
+
+
+    <select id="findByCurrentDate" resultType="com.rhy.bdmp.base.modules.sys.domain.po.NewsNotice">
+       SELECT news_notice_id, title, url, create_by, create_time
+       FROM t_portal_news_notice
+       where DATE_FORMAT(create_time,'%Y-%m-%d') = #{currentDate}
+    </select>
+
+</mapper>

@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.FacilitiesDao">
+
+    <!--查询路段（分页）-->
+    <select id="query" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.FacilitiesVo">
+        select temp.*
+               <if test="isShowChildren">
+                   ,(SELECT facilities_name FROM t_bdmp_assets_facilities WHERE facilities_id = temp.parent_id) parentName
+               </if>
+                ,if((select count(*) from t_bdmp_assets_facilities where parent_id = temp.facilities_id)>0,true,false) hasChildren,
+                if(((temp.parent_id is null or temp.parent_id = '') and ( temp.facilities_type != '32330711' and temp.facilities_type != '32330712' ) ),true,false) addAble
+        from (select fac.*,
+               way.waysection_name,
+               way.waysection_s_name,
+               org.org_id,
+               dict.name facilitiesTypeName
+        from t_bdmp_assets_facilities fac
+                 inner join t_bdmp_assets_waysection way
+                            on fac.waysection_id = way.waysection_id
+                 inner join t_bdmp_sys_org org
+                            on org.org_id = way.manage_id
+                 left join t_bdmp_assets_dict dict
+                           on fac.facilities_type = dict.code) temp
+        <where>
+            <if test="isUseUserPermissions">
+                <if test="1 == dataPermissionsLevel">
+                    and temp.org_id in (select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    and temp.waysection_id in (select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                </if>
+                <if test="3 == dataPermissionsLevel">
+                    and (temp.facilities_id in (select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2')
+                    or temp.parent_id in (select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'))
+                </if>
+            </if>
+            <if test="'org' == nodeType">
+                and temp.org_id = #{nodeId}
+            </if>
+            <if test="'way' == nodeType">
+                and temp.waysection_id = #{nodeId}
+            </if>
+            <if test="'fac' == nodeType">
+                and temp.facilities_id = #{nodeId}
+            </if>
+            <if test="null != facilitiesType and '' != facilitiesType">
+                and temp.facilities_type = #{facilitiesType}
+            </if>
+            <if test="null != facilitiesName and '' != facilitiesName">
+                and temp.facilities_name like concat('%',#{facilitiesName},'%')
+            </if>
+            <if test="null != parentId and '' != parentId">
+                and temp.parent_id = #{parentId}
+            </if>
+            <if test="null != isShowChildren and !isShowChildren">
+                and (temp.parent_id is null or temp.parent_id = '')
+            </if>
+        </where>
+        order by temp.sort asc,temp.create_time desc
+    </select>
+
+    <!--查询路段（分页）-->
+    <!--<select id="query" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.FacilitiesVo">
+        <choose>
+            <when test="isUseUserPermissions">
+                 select f.*,
+                (select w.waysection_name from t_bdmp_assets_waysection w where w.waysection_id = f.waysection_id) waysectionName,
+                (select w.waysection_s_name from t_bdmp_assets_waysection w where w.waysection_id = f.waysection_id) waysectionSName,
+                (SELECT p.facilities_name FROM t_bdmp_assets_facilities p WHERE p.facilities_id = f.parent_id) parentName,
+                (select dict.`name` from t_bdmp_assets_dict dict where dict.`code` = f.facilities_type) facilitiesTypeName,
+                if((select count(*) from t_bdmp_assets_facilities where parent_id = f.facilities_id)>0,true,false) hasChildren,
+                if((f.parent_id is null or f.parent_id = ''),true,false) addAble
+                from (
+                select * from t_bdmp_assets_facilities f1 where 1=1 and (f1.parent_id is null or f1.parent_id = '')
+                <choose>
+                    <when test="'org' == nodeType">
+                        <choose>
+                            <when test="1 == dataPermissionsLevel">
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists (
+                                select org_id from (
+                                select t.org_id from (
+                                select a.id,
+                                IF
+                                ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                from
+                                ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                ( select @pids := #{nodeId}) vars
+                                ) b
+                                join t_bdmp_sys_org t on b.id = t.org_id
+                                where
+                                b.ischild != '0' or t.org_id=#{nodeId}
+                                ) p where exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                p.org_id = o.permissions_id
+                                ) and p.org_id = w.manage_id
+                                )
+                                and w.waysection_id = f1.waysection_id
+                                )
+                            </when>
+                            <when test="2 == dataPermissionsLevel">
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists (
+                                select org_id from (
+                                select t.org_id from (
+                                select a.id,
+                                IF
+                                ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                from
+                                ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                ( select @pids := #{nodeId}) vars
+                                ) b
+                                join t_bdmp_sys_org t on b.id = t.org_id
+                                where
+                                b.ischild != '0' or t.org_id=#{nodeId}
+                                ) p where p.org_id = w.manage_id
+                                ) and exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                w.waysection_id = o.permissions_id
+                                )
+                                and w.waysection_id = f1.waysection_id
+                                )
+                            </when>
+                            <when test="3 == dataPermissionsLevel">
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists (
+                                select org_id from (
+                                select t.org_id from (
+                                select a.id,
+                                IF
+                                ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                from
+                                ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                ( select @pids := #{nodeId}) vars
+                                ) b
+                                join t_bdmp_sys_org t on b.id = t.org_id
+                                where
+                                b.ischild != '0' or t.org_id=#{nodeId}
+                                ) p where p.org_id = w.manage_id
+                                ) and w.waysection_id = f1.waysection_id
+                                )
+                                and exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                f1.facilities_id = o.permissions_id
+                                )
+                            </when>
+                        </choose>
+                    </when>
+                    <when test="'way' == nodeType">
+                        <choose>
+                            <when test="1 == dataPermissionsLevel">
+                                and f1.waysection_id = #{nodeId}
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                and w.manage_id = o.permissions_id
+                                ) and w.waysection_id = f1.waysection_id)
+                            </when>
+                            <when test="2 == dataPermissionsLevel">
+                                and f1.waysection_id = #{nodeId}
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                and w.waysection_id = o.permissions_id
+                                ) and w.waysection_id = f1.waysection_id)
+                            </when>
+                            <when test="3 == dataPermissionsLevel">
+                                and f1.waysection_id = #{nodeId}
+                                and exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                f1.facilities_id = o.permissions_id
+                                )
+                            </when>
+                        </choose>
+                    </when>
+                    <when test="'fac' == nodeType">
+                        <choose>
+                            <when test="1 == dataPermissionsLevel">
+                                and f1.facilities_id = #{nodeId}
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                and w.manage_id = o.permissions_id
+                                ) and w.waysection_id = f1.waysection_id)
+                            </when>
+                            <when test="2 == dataPermissionsLevel">
+                                f1.facilities_id = #{nodeId}
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists(
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                and w.waysection_id = o.permissions_id
+                                ) and w.waysection_id = f1.waysection_id)
+                            </when>
+                            <when test="3 == dataPermissionsLevel">
+                                f1.facilities_id = #{nodeId}
+                                and exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                f1.facilities_id = o.permissions_id
+                                )
+                            </when>
+                        </choose>
+                    </when>
+                    <otherwise>
+                        <choose>
+                            <when test="1 == dataPermissionsLevel">
+                                and exists (
+                                select waysection_id from t_bdmp_assets_waysection w
+                                where exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                w.manage_id = o.permissions_id
+                                ) and w.waysection_id = f1.waysection_id)
+                            </when>
+                            <when test="2 == dataPermissionsLevel">
+                                and exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                f1.waysection_id = o.permissions_id
+                                )
+                            </when>
+                            <when test="3 == dataPermissionsLevel">
+                                and exists (
+                                select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                f1.facilities_id = o.permissions_id
+                                )
+                            </when>
+                        </choose>
+                    </otherwise>
+                </choose>
+                <if test="isShowChildren">
+                    union
+                    select * from t_bdmp_assets_facilities f2 where f2.parent_id in(
+                    select facilities_id from t_bdmp_assets_facilities f1 where 1=1 and (f1.parent_id is null or f1.parent_id = '')
+                    <choose>
+                        <when test="'org' == nodeType">
+                            <choose>
+                                <when test="1 == dataPermissionsLevel">
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists (
+                                    select org_id from (
+                                    select t.org_id from (
+                                    select a.id,
+                                    IF
+                                    ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                    from
+                                    ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                    ( select @pids := #{nodeId}) vars
+                                    ) b
+                                    join t_bdmp_sys_org t on b.id = t.org_id
+                                    where
+                                    b.ischild != '0' or t.org_id=#{nodeId}
+                                    ) p where exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    p.org_id = o.permissions_id
+                                    ) and p.org_id = w.manage_id
+                                    )
+                                    and w.waysection_id = f1.waysection_id
+                                    )
+                                </when>
+                                <when test="2 == dataPermissionsLevel">
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists (
+                                    select org_id from (
+                                    select t.org_id from (
+                                    select a.id,
+                                    IF
+                                    ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                    from
+                                    ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                    ( select @pids := #{nodeId}) vars
+                                    ) b
+                                    join t_bdmp_sys_org t on b.id = t.org_id
+                                    where
+                                    b.ischild != '0' or t.org_id=#{nodeId}
+                                    ) p where p.org_id = w.manage_id
+                                    ) and exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    w.waysection_id = o.permissions_id
+                                    )
+                                    and w.waysection_id = f1.waysection_id
+                                    )
+                                </when>
+                                <when test="3 == dataPermissionsLevel">
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists (
+                                    select org_id from (
+                                    select t.org_id from (
+                                    select a.id,
+                                    IF
+                                    ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                                    from
+                                    ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                                    ( select @pids := #{nodeId}) vars
+                                    ) b
+                                    join t_bdmp_sys_org t on b.id = t.org_id
+                                    where
+                                    b.ischild != '0' or t.org_id=#{nodeId}
+                                    ) p where p.org_id = w.manage_id
+                                    ) and w.waysection_id = f1.waysection_id
+                                    )
+                                    and exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    f1.facilities_id = o.permissions_id
+                                    )
+                                </when>
+                            </choose>
+                        </when>
+                        <when test="'way' == nodeType">
+                            <choose>
+                                <when test="1 == dataPermissionsLevel">
+                                    and f1.waysection_id = #{nodeId}
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                    and w.manage_id = o.permissions_id
+                                    ) and w.waysection_id = f1.waysection_id)
+                                </when>
+                                <when test="2 == dataPermissionsLevel">
+                                    and f1.waysection_id = #{nodeId}
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                    and w.waysection_id = o.permissions_id
+                                    ) and w.waysection_id = f1.waysection_id)
+                                </when>
+                                <when test="3 == dataPermissionsLevel">
+                                    and f1.waysection_id = #{nodeId}
+                                    and exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    f1.facilities_id = o.permissions_id
+                                    )
+                                </when>
+                            </choose>
+                        </when>
+                        <when test="'fac' == nodeType">
+                            <choose>
+                                <when test="1 == dataPermissionsLevel">
+                                    and f1.facilities_id = #{nodeId}
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                    and w.manage_id = o.permissions_id
+                                    ) and w.waysection_id = f1.waysection_id)
+                                </when>
+                                <when test="2 == dataPermissionsLevel">
+                                    f1.facilities_id = #{nodeId}
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists(
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2'
+                                    and w.waysection_id = o.permissions_id
+                                    ) and w.waysection_id = f1.waysection_id)
+                                </when>
+                                <when test="3 == dataPermissionsLevel">
+                                    f1.facilities_id = #{nodeId}
+                                    and exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    f1.facilities_id = o.permissions_id
+                                    )
+                                </when>
+                            </choose>
+                        </when>
+                        <otherwise>
+                            <choose>
+                                <when test="1 == dataPermissionsLevel">
+                                    and exists (
+                                    select waysection_id from t_bdmp_assets_waysection w
+                                    where exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    w.manage_id = o.permissions_id
+                                    ) and w.waysection_id = f1.waysection_id)
+                                </when>
+                                <when test="2 == dataPermissionsLevel">
+                                    and exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    f1.waysection_id = o.permissions_id
+                                    )
+                                </when>
+                                <when test="3 == dataPermissionsLevel">
+                                    and exists (
+                                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId} and data_type='2' and
+                                    f1.facilities_id = o.permissions_id
+                                    )
+                                </when>
+                            </choose>
+                        </otherwise>
+                    </choose>
+                    )
+                </if>
+                ) f where 1=1
+                <if test="null != facilitiesType and '' != facilitiesType">
+                    and f.facilities_type = #{facilitiesType}
+                </if>
+                <if test="null != facilitiesName and '' != facilitiesName">
+                    and f.facilities_name like concat('%',#{facilitiesName},'%')
+                </if>
+                <if test="null != parentId and '' != parentId">
+                    and f.parent_id = #{parentId}
+                </if>
+                order by f.sort asc, f.create_time desc
+            </when>
+            <otherwise>
+                select f.*,
+                (select w.waysection_name from t_bdmp_assets_waysection w where w.waysection_id = f.waysection_id) waysectionName,
+                (select w.waysection_s_name from t_bdmp_assets_waysection w where w.waysection_id = f.waysection_id) waysectionSName,
+                (SELECT p.facilities_name FROM t_bdmp_assets_facilities p WHERE p.facilities_id = f.parent_id) parentName,
+                (select dict.`name` from t_bdmp_assets_dict dict where dict.`code` = f.facilities_type) facilitiesTypeName,
+                if((select count(*) from t_bdmp_assets_facilities where parent_id = f.facilities_id)>0,true,false) hasChildren,
+                if((f.parent_id is null or f.parent_id = ''),true,false) addAble
+                from (
+                select * from t_bdmp_assets_facilities f1 where 1=1 and (f1.parent_id is null or f1.parent_id = '')
+                <choose>
+                    <when test="'org' == nodeType">
+                        and exists (
+                        select waysection_id from t_bdmp_assets_waysection w where exists(
+                        select org_id from (
+                        select t.org_id from (
+                        select a.id,
+                        IF
+                        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                        from
+                        ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                        ( select @pids := #{nodeId}) vars
+                        ) b
+                        join t_bdmp_sys_org t on b.id = t.org_id
+                        where
+                        b.ischild != '0' or t.org_id=#{nodeId}
+                        ) p where p.org_id = w.manage_id)
+                        and w.waysection_id = f1.waysection_id
+                        )
+                    </when>
+                    <when test="'way' == nodeType">
+                        and f1.waysection_id = #{nodeId}
+                    </when>
+                    <when test="'fac' == nodeType">
+                        and f1.facilities_id = #{nodeId}
+                    </when>
+                </choose>
+                <if test="isShowChildren">
+                    union
+                    select * from t_bdmp_assets_facilities f2 where f2.parent_id in(
+                    select facilities_id from t_bdmp_assets_facilities f1 where 1=1 and (f1.parent_id is null or f1.parent_id = '')
+                    <choose>
+                        <when test="'org' == nodeType">
+                            and exists (
+                            select waysection_id from t_bdmp_assets_waysection w where exists(
+                            select org_id from (
+                            select t.org_id from (
+                            select a.id,
+                            IF
+                            ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) as ischild
+                            from
+                            ( select org_id as id, parent_id as pid from t_bdmp_sys_org ) a,
+                            ( select @pids := #{nodeId}) vars
+                            ) b
+                            join t_bdmp_sys_org t on b.id = t.org_id
+                            where
+                            b.ischild != '0' or t.org_id=#{nodeId}
+                            ) p where p.org_id = w.manage_id)
+                            and w.waysection_id = f1.waysection_id
+                            )
+                        </when>
+                        <when test="'way' == nodeType">
+                            and f1.waysection_id = #{nodeId}
+                        </when>
+                        <when test="'fac' == nodeType">
+                            and f1.facilities_id = #{nodeId}
+                        </when>
+                    </choose>
+                    )
+                </if>
+                ) f where 1=1
+                <if test="null != facilitiesType and '' != facilitiesType">
+                    and f.facilities_type = #{facilitiesType}
+                </if>
+                <if test="null != facilitiesName and '' != facilitiesName">
+                    and f.facilities_name like concat('%',#{facilitiesName},'%')
+                </if>
+                <if test="null != parentId and '' != parentId">
+                    and f.parent_id = #{parentId}
+                </if>
+                order by f.sort asc, f.create_time desc
+            </otherwise>
+        </choose>
+    </select>-->
+
+    <!--更新子设施所属路段-->
+    <update id="updateWaySectionByFacChlild">
+          update t_bdmp_assets_facilities f set waysection_id=#{waySectionId}
+          where exists(
+              select o.facilities_id from (
+                  SELECT t.facilities_id
+                  FROM
+                    (
+                    SELECT
+                        a.id,
+                    IF
+                        ( find_in_set( pid, @pids ) > 0, @pids := concat( @pids, ',', id ), 0 ) AS ischild
+                    FROM
+                        ( SELECT facilities_id AS id, parent_id AS pid FROM t_bdmp_assets_facilities ) a,
+                        ( SELECT @pids := #{facilitiesId} ) vars
+                    ) b
+                    JOIN t_bdmp_assets_facilities t ON b.id = t.facilities_id
+                  WHERE
+                    b.ischild != '0'
+              ) o where o.facilities_id = f.facilities_id
+          )
+    </update>
+
+    <select id="getUserById" resultType="com.rhy.bdmp.system.modules.assets.domain.po.User">
+        select * from t_bdmp_sys_user where user_id = #{userId}
+    </select>
+
+    <select id="findTollStations" resultType="com.rhy.bdmp.base.modules.assets.domain.po.Facilities">
+        SELECT
+	        f.facilities_id, f.facilities_name
+        FROM
+	        t_bdmp_assets_facilities f
+        WHERE
+            f.facilities_type = '32330200'
+        AND (f.parent_id is null or f.parent_id = '')
+        AND f.waysection_id = #{waysectionId}
+    </select>
+
+</mapper>

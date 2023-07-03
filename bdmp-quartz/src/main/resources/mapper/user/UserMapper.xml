@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.quartz.modules.sysbusiness.dao.UserDao">
+
+    <select id="selectById" resultType="com.rhy.bdmp.base.modules.sys.domain.po.User">
+        SELECT
+            user_id,
+            username,
+            nick_name,
+            PASSWORD,
+            app_id,
+            user_type,
+            expired_time,
+            pwd_reset_time,
+            org_id,
+            sex,
+            birthday,
+            native_place,
+            national,
+            is_emergency,
+            politics_status,
+            post,
+            post_level,
+            most_education,
+            graduated_school,
+            phone,
+            email,
+            certificate_type,
+            certificate_no,
+            avatar,
+            default_url,
+            data_permissions_level,
+            is_admin,
+            user_config,
+            sort,
+            datastatusid,
+            create_by,
+            create_time,
+            update_by,
+            update_time
+        FROM
+            basedata.t_bdmp_sys_user
+        WHERE
+            user_id = #{userId}
+    </select>
+</mapper>

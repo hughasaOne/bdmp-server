@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.assets.dao.WaySectionDao">
+
+    <!--查询路段（分页）-->
+    <select id="queryPage" resultType="com.rhy.bdmp.system.modules.assets.domain.vo.WaysectionVo">
+        select way.* ,
+        (select n.waynet_name FROM t_bdmp_assets_waynet n where n.waynet_code = way.waynet_id) waynetName,
+        (select n.waynet_s_name FROM t_bdmp_assets_waynet n where n.waynet_code = way.waynet_id) waynetSName,
+        org.org_name manageName,
+        org.org_short_name manageSName
+        from t_bdmp_assets_waysection way
+        inner join t_bdmp_sys_org org on way.manage_id = org.org_id
+        <where>
+            <if test="null != orgId and '' != orgId">
+                and (org.org_id = #{orgId} or org.parent_id = #{orgId})
+            </if>
+            <if test="isUseUserPermissions">
+                and exists(
+                <if test="1 == dataPermissionsLevel">
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId}
+                    and data_type='2' and way.manage_id = o.permissions_id
+                </if>
+                <if test="2 == dataPermissionsLevel">
+                    select permissions_id from t_bdmp_sys_user_data o where user_id=#{userId}
+                    and data_type='2' and way.waysection_id = o.permissions_id
+                </if>
+                )
+            </if>
+            <if test="null != waySectionName and '' != waySectionName">
+                and way.waysection_name like concat('%',#{waySectionName},'%')
+            </if>
+            <if test="null != waynetId and '' != waynetId">
+                and way.waynet_id like concat('%',#{waynetId},'%')
+            </if>
+        </where>
+        order by way.sort asc,way.create_time desc
+    </select>
+
+    <select id="getUserById" resultType="com.rhy.bdmp.system.modules.assets.domain.po.User">
+        select * from t_bdmp_sys_user where user_id = #{userId}
+    </select>
+
+</mapper>

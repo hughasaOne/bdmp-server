@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.open.modules.system.dao.ResourceDao">
+
+    <select id="selectResourceByTypeAndRole2" resultType="com.rhy.bdmp.open.modules.system.domain.vo.ResourceVo">
+        SELECT resource_id,
+               resource_title,
+               parent_id,
+               resource_type,
+               app_id,
+               external_link,
+               external_link_url,
+               external_link_open,
+               CACHE,
+               hidden,
+               path,
+               component_name,
+               component_path,
+               icon,
+               permission,
+               description,
+               sort,
+               datastatusid,
+               create_by,
+               create_time,
+               update_by,
+               update_time
+        FROM t_bdmp_sys_resource resource
+        WHERE app_id = #{appId}
+          AND EXISTS(
+                SELECT resource_id
+                FROM t_bdmp_sys_role_resource roleResource
+                WHERE EXISTS(
+                        SELECT role_id
+                        FROM t_bdmp_sys_role role
+                        WHERE app_id = #{appId}
+                          AND EXISTS(SELECT role_id
+                                     FROM t_bdmp_sys_user_role userRole
+                                     WHERE user_id = #{userId} AND userRole.role_id = role.role_id)
+                          AND roleResource.role_id = role.role_id
+                    )
+                  AND resource.resource_id = roleResource.resource_id
+            )
+        ORDER BY sort ASC, create_time DESC
+    </select>
+</mapper>

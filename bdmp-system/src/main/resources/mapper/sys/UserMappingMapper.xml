@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rhy.bdmp.system.modules.sys.dao.UserMappingDao">
+
+	<!--查询用户映射(根据用户ID、应用ID)-->
+    <select id="findUserMappingByUserIdAndAppId"
+            resultType="com.rhy.bdmp.system.modules.sys.domain.vo.UserMappingVo">
+            SELECT
+                user_mapping_id,
+	            ( SELECT nick_name FROM t_bdmp_sys_user u1 WHERE u1.user_id = um.user_id AND u1.app_id = '1' ) AS nickName,
+	            ( SELECT app_name FROM t_bdmp_sys_app a WHERE a.app_id = um.app_id ) AS appName,
+	            u.nick_name AS appUserName,
+	            u.username AS appUserAccount
+            FROM
+	            t_bdmp_sys_user_mapping um,(
+	            SELECT
+		            nick_name,
+		            username,
+		            user_id
+	            FROM
+		            t_bdmp_sys_user
+	            ) u
+            WHERE
+	            um.app_user_id = u.user_id
+	            AND um.user_id = #{userId}
+	            AND um.app_id = #{appId}
+    </select>
+
+	<!--查询用户映射(根据用户ID、应用下用户ID)-->
+    <select id="findUserMappingByAppIdAndAppUserId"
+            resultType="com.rhy.bdmp.system.modules.sys.domain.vo.UserMappingVo">
+            SELECT
+                user_mapping_id,
+	            ( SELECT app_name FROM t_bdmp_sys_app a WHERE a.app_id = um.app_id ) AS appName,
+	            u.nick_name AS appUserName,
+	            u.username AS appUserAccount,
+	            c.nick_name AS nickName,
+	            c.username AS userAccount
+            FROM
+	            t_bdmp_sys_user_mapping um,(
+	            SELECT
+		            nick_name,
+		            username,
+		            user_id
+	            FROM
+		            t_bdmp_sys_user
+		            ) u,(
+	            SELECT
+		            nick_name,
+		            username,
+		            user_id
+	            FROM
+		            t_bdmp_sys_user
+	            WHERE
+		            app_id = '1'
+	            ) c
+            WHERE
+	            um.app_user_id = u.user_id
+	            AND um.user_id = c.user_id
+	            AND um.app_user_id = #{appUserId}
+	            AND um.app_id = #{appId}
+    </select>
+
+	<!--基础数据下的用户的映射用户不重复-->
+	<select id="checkAppSubUserRepeat" resultType="java.lang.Boolean">
+		select count(*) > 0 from t_bdmp_sys_user_mapping
+		where user_id = #{userMapping.userId}
+		  and (select count(*) from t_bdmp_sys_user where user_id = #{userMapping.userId} and app_id = '1') > 0
+		  and app_user_id = #{userMapping.appUserId}
+	</select>
+
+	<!--基础数据下的用户映射同一个app下的用户不超过一个-->
+	<select id="checkAppSubuserMultiple" resultType="java.lang.Boolean">
+		select count(*) > 0 from t_bdmp_sys_user_mapping
+		where user_id = #{userMapping.userId}
+		  and (select count(*) from t_bdmp_sys_user where user_id = #{userMapping.userId} and app_id = '1') > 0
+		  and app_id = #{userMapping.appId}
+	</select>
+</mapper>
